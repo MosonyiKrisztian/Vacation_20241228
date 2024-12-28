@@ -1,0 +1,51 @@
+﻿@page "/adddepartment"
+@using SharedDTO
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+<h3>Részleg felvétele</h3>
+
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <EditForm Model="newDepartment" OnValidSubmit="AddnewDepartment" FormName="AddnewDepartment" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="fn" class="form-label">Részleg megnevezése:</label>
+                <InputText id="fn" class="form-control" @bind-Value="newDepartment.DepartmentDescription" />
+                <ValidationMessage class="text-danger" For="()=>newDepartment.DepartmentDescription" />
+            </div>
+            <button type="submit" class="btn btn-siker mb-4">Mentés</button>
+            <a href="/indexdepartment" class="btn btn-keres mb-4">vissza</a>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+
+    [SupplyParameterFromForm]
+    public DepartmentDTO newDepartment { get; set; } = new();
+
+ 
+    public async Task AddnewDepartment()
+    {
+        var response = await HttpClient.PostAsJsonAsync("Account/AddDepartment", newDepartment);
+        if (response.IsSuccessStatusCode)
+        {
+            NavManager.NavigateTo("/indexdepartment");
+        }
+        else
+        {
+            var errorResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Error: {response.StatusCode}, Message: {errorResponse}");
+        }
+    }
+
+
+}
+
+
+
+

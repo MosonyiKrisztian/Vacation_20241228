@@ -1,0 +1,109 @@
+﻿.approval-header {
+    display:flex;
+    width: 90%;
+    margin-block: 1cqh;
+    font-weight: bold;
+}
+.approval-header > section{
+    margin-top: 5px;
+    margin-left: 5px;
+}
+
+.editformvacation {
+    display: inline-flex;
+    width:90%;
+  
+}
+
+    .editformvacation div:nth-child(n+1) {
+        margin-left: 5px;
+        margin-top: 5px;
+    }
+
+button, select {
+    margin: 0;
+}
+
+.container-fluid{
+display:flex;
+justify-content:center;
+margin-inline:auto;
+}
+
+h3 {
+    color: white;
+    justify-content: center;
+    font-size: calc(2cqw + 1rem);
+    display: flex;
+    white-space: nowrap;
+    letter-spacing: 0.5cqw;
+    font-weight: bold;
+    margin: 2rem 8rem 1rem 8rem;
+    text-shadow: midnightblue 0.5dvw 0.5dvw 0.5px;
+}
+
+.btn-siker {
+    width: 8rem;
+    background-color: midnightblue;
+    border-color: darkgrey;
+    text-align: center;
+    font-size: 1rem;
+    color: white;
+    font-weight: bold;
+    border-style: inset;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+    .btn-siker:hover {
+        background-color: white;
+        text-align: center;
+        font-weight: bold;
+        color: midnightblue;
+        border-color: white;
+        text-decoration-line: underline;
+    }
+
+.btn-keres {
+    width: 8rem;
+    background-color: darkgray;
+    border-color: darkgrey;
+    text-align: center;
+    font-size: 1rem;
+    color: black;
+    font-weight: bold;
+    border-style: inset;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+    .btn-keres:hover {
+        background-color: dimgrey;
+        text-align: center;
+        font-weight: bold;
+        text-decoration-line: underline;
+        color: white;
+    }
+
+@media screen and (width < 768px) {
+    .editfromvacation {
+        margin-inline: auto;
+        width: fit-content;
+        margin-block: 2cqh;
+    }
+
+        .editformvacation > select {
+            font-size: calc(1.7cqw + 0.5rem);
+        }
+
+    .container-fluid {
+        margin: 0;
+        padding: 0;
+    }
+
+    
+}

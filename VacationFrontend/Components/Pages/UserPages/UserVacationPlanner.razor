@@ -1,0 +1,516 @@
+﻿@page "/planner/{id:int}"
+
+@layout Layout.CalendarLayout
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@using SharedDTO
+
+@rendermode InteractiveServer
+
+<div>
+    <h3><span>SZABADSÁGTERVEZŐ</span></h3>
+</div>
+
+@* <div>
+   @foreach (var emp in employeeList)
+    {   *@
+        <div class="alapadatok d-flex">
+                <div class="nev d-inline-flex"><span>Név:</span><div>  teszt user@* @emp.FirstName @emp.LastName *@ </div></div>
+
+        </div>
+@*     }
+</div> *@
+
+
+
+@* <AuthorizeView>
+    <div class="nametag">
+        <label>
+            Bejelentkezve: <span>@context.User.Identity.Name</span>
+        </label>
+    </div>
+</AuthorizeView>
+ *@
+<div class="yearcontainer d-flex justify-content-center">
+    <button @onclick="DecreaseYear" class="yearswitch">@("<<")</button>
+
+    <label class="actual-year-label"> @actualYear  </label>
+
+    <button @onclick="IncreaseYear" class="yearswitch">@(">>")</button>
+
+
+    <select bind="@monthIndex" value="@monthIndex" @onchange="LoadCalender">
+        @foreach (string monthName in monthNames)
+        {
+            <option value="@monthNames.IndexOf(monthName)">@monthName</option>
+        }
+    </select>
+</div>
+
+<div class="calender-container" >
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                @for (var dayIndex = 0; dayIndex < days.Count(); dayIndex++)
+                {
+                    <th>
+                        @days[dayIndex]
+                    </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (var weekIndex = 0; weekIndex < weeks.Count(); weekIndex++)
+            {
+                <tr>
+                    @for (var dayIndex = 0; dayIndex < weeks[weekIndex].Dates.Count(); dayIndex++)
+                    {
+                        var showdate = @weeks[weekIndex].Dates[dayIndex].StartDate;
+                        var todate = @weeks[weekIndex].Dates[dayIndex].ToDate;
+                        var colorcode = @weeks[weekIndex].Dates[dayIndex].Type;
+                        <td style="background-color:@colorcode"
+                            id="@todate" @onclick="() => Showbuttonvalue(todate)">
+                            <div class ="days-container">
+                                 <div>@weeks[weekIndex].Dates[dayIndex].DateValue</div>
+                                 <div>
+                                    @if (@weeks[weekIndex].Dates[dayIndex].status == 1)
+                                    {
+                                        <img src="/Img/QuestionMarkCircle.png" class="Code-display" alt="questionmark">
+                                    }
+                                    else if (@weeks[weekIndex].Dates[dayIndex].status == 2)
+                                    {
+                                        <img src="/Img/CheckCircle1.png" class="Code-display" alt="checked">
+                                    }
+                                    else if (@weeks[weekIndex].Dates[dayIndex].status == 3)
+                                    {
+                                        <img src="/Img/XmarkCircle.png" class="Code-display" alt="Xmark">
+                                    }
+                                 </div>
+                            </div>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="type-button-maincontainer">
+        <div class="type-button-container" >
+           
+                <div class="button-container d-flex">
+                    <button @onclick=@(_=>GetButtonValue("#ffffff")) id="ffffff" class="type-button" style="background-color: #ffffff">
+                        jelen 
+                        <input type="radio" id="#ffffff" name="options" checked="@(isChecked0 ? "checked" : null)" disabled="disabled"/>
+                    </button>
+                </div>
+
+                <div class="button-container d-flex">
+                    <button @onclick=@(_=>GetButtonValue("#e9bc7b")) id="e9bc7b" class="type-button" style="background-color: #e9bc7b">
+                        alap 
+                        <input type="radio" id="#e9bc7b" name="options" checked="@(isChecked1 ? "checked" : null)" disabled="disabled" />
+                    </button>
+                </div>
+
+                <div class="button-container d-flex">
+                    <button @onclick=@(_=>GetButtonValue("#fc6fa0")) id="fc6fa0" class="type-button" style="background-color: #fc6fa0">
+                        pót
+                        <input type="radio" id="#fc6fa0" name="options" checked="@(isChecked2 ? "checked" : null)" disabled="disabled" />
+                    </button>
+                </div>
+
+                <div class="button-container d-flex">
+                    <button @onclick=@(_=>GetButtonValue("#0dcf35")) id="0dcf35" class="type-button" style="background-color: #0dcf35">
+                        extra
+                    <input type="radio" id="0dcf35" name="options" checked="@(isChecked3 ? "checked" : null)" disabled="disabled" />
+                    </button>
+                </div>
+@* 
+                <div class="button-container d-flex">
+                    <button @onclick=@(_=>GetButtonValue("#7fa7db")) id="7fa7db" class="type-button" style="background-color: #7fa7db">
+                        beteg
+                        <input type="radio" id="7fa7db" name="options" checked="@(isChecked4 ? "checked" : null)" disabled="disabled" />
+                    </button>
+                </div> *@
+
+@*                 <div class ="button-container d-flex">
+                <button @onclick=@(_=>GetButtonValue("#ffff00")) id="ffff00" class="type-button" style="background-color: #ffff00">
+                    egyéb
+                    <input type="radio" id="ffff00" name="options" checked="@(isChecked5 ? "checked" : null)" disabled="disabled" />
+                </button>
+                </div> *@
+        </div>
+    </div>
+</div>
+
+<div class="buttoncontainer">
+<a href="#" @onclick="SubmitRequests" class="btn-submit d-inline-flex">Mentés és küldés</a>
+<a href="@($"uservacation/{id}")" class="btn btn-keres d-inline-flex">Vissza</a>
+</div>
+<p>@message</p>
+
+
+@code {
+    //user
+    // List<EmployeeDTO> employeeList = new();
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     try
+    //     {
+    //         employeeList = await HttpClient.GetFromJsonAsync<List<EmployeeDTO>>("Account/EmployeeGet");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Console.WriteLine($"Error fetching data: {ex.Message}");
+    //     }
+    // }
+
+
+    //szabadság
+    [Parameter]
+    public int id { get; set; }
+
+    List<string> monthNames = new List<string>();
+    List<string> days = new List<string>();
+    List<WeekDTO> weeks = new List<WeekDTO>();
+    List<NewVacationRequestDTO> dates = new List<NewVacationRequestDTO>();
+
+    List<NewVacationRequestDTO>? VacationsList;
+    List<IrregularDaysDTO>? IrregularDaysList;
+
+    private HashSet<NewVacationRequestDTO> _datesWithVacation = new HashSet<NewVacationRequestDTO>();
+    DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+    DateTime modStartDate;
+    DateTime endDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddMonths(1).AddDays(-1);
+    DateTime modEndDate;
+    private int actualMonth { get; set; } = DateTime.Now.Month;
+    private int monthIndex { get; set; } = DateTime.Now.Month - 1;
+    private static int actualYear { get; set; } = DateTime.Now.Year;
+    private DateTime actualDate = DateTime.Now;
+    private int sequenceOfStartDayOfWeek;
+    private int sequenceOfEndDayOfWeek;
+    private int selectedMonth { get; set; } = DateTime.Now.Month;
+    private bool isChecked0 = false;
+    private bool isChecked1 = false;
+    private bool isChecked2 = false;
+    private bool isChecked3 = false;
+    private bool isChecked4 = false;
+    private bool isChecked5 = false;
+    public string buttonvalue = "";
+    public string message = "";
+    public string searchText = "";
+    // private List<int> yearOptions { get; set; } = Enumerable.Range(actualYear - 1, DateTime.Now.Year + 3 - actualYear).ToList();  //actual year +- 1 year
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        monthNames = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthGenitiveNames.ToList();
+
+        VacationsList = await HttpClient.GetFromJsonAsync<List<NewVacationRequestDTO>>($"/Vacation/EmployeeVacationRequest/{id}");
+
+        IrregularDaysList = await HttpClient.GetFromJsonAsync<List<IrregularDaysDTO>>("Vacation/IrregularDay");
+
+        //remove the last indexed element = ""
+        if (monthNames.Any()) //prevent IndexOutOfRangeException for empty list
+        {
+            monthNames.RemoveAt(monthNames.Count - 1);
+        }
+        selectedMonth = actualMonth;
+
+        AddAdjacentMonthFractions();
+        GenerateCalenderHead();
+        GenerateCalenderBody();   
+
+    }
+
+    private void LoadCalender(ChangeEventArgs e)
+    {
+        selectedMonth = Int32.Parse(e.Value.ToString()) + 1;
+
+        // int monthIndex = DateTime.ParseExact(month, "MMMM", System.Globalization.CultureInfo.CreateSpecificCulture("en-GB")).Month;
+        startDate = new DateTime(actualYear, selectedMonth, 1);
+        endDate = new DateTime(actualYear, selectedMonth, 1).AddMonths(1).AddDays(-1);
+
+        AddAdjacentMonthFractions();
+        GenerateCalenderHead();
+        GenerateCalenderBody();
+    }
+
+    private void GenerateCalenderHead()
+    {
+        var day1 = new List<string>();
+        for (var dt = modStartDate; dt <= modEndDate; dt = dt.AddDays(1))
+        {
+            day1.Add(dt.ToString("dddd").PadLeft(10 - dt.ToString("dddd").Count() / 2).PadRight(10 - dt.ToString("dddd").Count() / 2));
+        }
+
+        days = day1.Distinct().ToList();
+    }
+
+    private void GenerateCalenderBody()
+    {
+        int flag = 0;
+        WeekDTO week = new WeekDTO();
+        weeks = new List<WeekDTO>();
+        dates.Clear();
+
+        var totalDays = (int)(modEndDate - modStartDate).TotalDays;
+        int countdays = 0;
+        for (var dt = modStartDate; dt <= modEndDate; dt = dt.AddDays(1))
+        {
+            flag++;
+
+            // if (dt.Month != modEndDate.Month)
+            dates.Add(new NewVacationRequestDTO()
+                {
+                    // DateValue = dt.ToString("MMM-dd"),
+                    DateValue = dt.ToString("dd"),
+                    ToDate = dt,
+                    Type = ""
+                });
+
+            if (flag == 7)
+            {
+                week = new WeekDTO();
+                week.Dates = dates;
+                weeks.Add(week);
+
+                dates = new List<NewVacationRequestDTO>();
+                flag = 0;
+            }
+
+            countdays++;
+        }
+
+        for (var weekIndex = 0; weekIndex < weeks.Count(); weekIndex++)
+        {
+            for (var dayIndex = 0; dayIndex < weeks[weekIndex].Dates.Count(); dayIndex++)
+            {
+                if (weeks[weekIndex].Dates[dayIndex].ToDate.Month != selectedMonth)             //days not in actual month
+                {
+                    weeks[weekIndex].Dates[dayIndex].Type = "#d4d0cf";                     //lightgrey = RGB:212, 208, 207
+                    weeks[weekIndex].Dates[dayIndex].status = 0;
+                }
+
+                if (dayIndex >= 5)                                                      
+                {
+                    weeks[weekIndex].Dates[dayIndex].Type = "#d4d0cf";                  
+                    weeks[weekIndex].Dates[dayIndex].status = 0;
+
+                    foreach (var day in IrregularDaysList)
+                    {
+                        if (day.IrrDate == weeks[weekIndex].Dates[dayIndex].ToDate)
+                        {
+                            weeks[weekIndex].Dates[dayIndex].Type = "#ffffff";
+                            weeks[weekIndex].Dates[dayIndex].status = 0;
+                        }
+                    }
+
+                    if (VacationsList != null)
+                    {
+                        foreach (var date in VacationsList)
+                        {
+                            if (date.ToDate == weeks[weekIndex].Dates[dayIndex].ToDate && date.ToDate.Year == actualYear)
+                            {
+                                weeks[weekIndex].Dates[dayIndex].Type = date.Type;
+                                weeks[weekIndex].Dates[dayIndex].status = date.status;
+                            }
+                        }
+                    }
+                }
+                if (dayIndex < 5)
+                {   //reload the already selected but not yet submitted absence codes
+                    weeks[weekIndex].Dates[dayIndex].status = 0;
+
+                    if (VacationsList != null)
+                    {
+                        foreach (var date in VacationsList)
+                        {
+                            if (date.ToDate == weeks[weekIndex].Dates[dayIndex].ToDate && date.ToDate.Year == actualYear)
+                            {
+                                weeks[weekIndex].Dates[dayIndex].Type = date.Type;
+                                weeks[weekIndex].Dates[dayIndex].status = date.status;
+                            }
+                        }
+                    }
+                    foreach (var day in IrregularDaysList)
+                    {
+                        if (day.IrrDate == weeks[weekIndex].Dates[dayIndex].ToDate)
+                        {
+                            weeks[weekIndex].Dates[dayIndex].Type = "#ff0000";
+                        }
+                    }
+                }
+            }
+        }
+    }
+    private void IncreaseYear()
+    {
+        if (actualYear < DateTime.Now.Year + 1)
+        {
+            actualYear++;
+            startDate = new DateTime(actualYear, selectedMonth, 1);
+            endDate = new DateTime(actualYear, selectedMonth, 1).AddMonths(1).AddDays(-1);
+        }
+        AddAdjacentMonthFractions();
+        GenerateCalenderHead();
+        GenerateCalenderBody();
+    }
+
+    private void DecreaseYear()
+    {
+        actualYear--;
+        startDate = new DateTime(actualYear, selectedMonth, 1);
+        endDate = new DateTime(actualYear, selectedMonth, 1).AddMonths(1).AddDays(-1);
+
+        AddAdjacentMonthFractions();
+        GenerateCalenderHead();
+        GenerateCalenderBody();
+    }
+
+    private void AddAdjacentMonthFractions()
+    {
+        //start of month
+        sequenceOfStartDayOfWeek = (int)startDate.DayOfWeek == 6 ? (int)startDate.DayOfWeek - 8 : (int)startDate.DayOfWeek - 1;
+        modStartDate = startDate.AddDays(-sequenceOfStartDayOfWeek);
+
+        //end of month
+        sequenceOfEndDayOfWeek = (int)endDate.DayOfWeek == 0 ? 0 : (int)endDate.DayOfWeek - 1;
+        modEndDate = endDate.AddDays(6 - sequenceOfEndDayOfWeek);
+    }
+
+    private void Showbuttonvalue(DateTime toDate)
+    {
+        message = "";
+        if (toDate <= actualDate)
+        {
+            message = ($"Dátum: {toDate}   Dátum a múltban");
+        }
+        else
+        {
+            for (var weekIndex = 0; weekIndex < weeks.Count(); weekIndex++)
+            {
+                for (var dayIndex = 0; dayIndex < weeks[weekIndex].Dates.Count(); dayIndex++)
+                {
+                    if ( weeks[weekIndex].Dates[dayIndex].ToDate.Month == selectedMonth)
+                    {
+                        if (weeks[weekIndex].Dates[dayIndex].ToDate == toDate)
+                        {
+                            if (weeks[weekIndex].Dates[dayIndex].status == 0)  //add only not yet submitted requests
+                            {
+                                if (dayIndex < 5)
+                                {
+                                    if (weeks[weekIndex].Dates[dayIndex].Type != "buttonvalue")
+                                    {
+                                        weeks[weekIndex].Dates[dayIndex].Type = buttonvalue;
+                                        dates.Add(weeks[weekIndex].Dates[dayIndex]);
+                                    }
+                                }
+                                foreach(var day in IrregularDaysList)
+                                {
+
+                                    if (toDate == day.IrrDate && day.Workday == true && dayIndex >= 5)
+                                    {
+                                        if (weeks[weekIndex].Dates[dayIndex].Type != "buttonvalue")
+                                        {
+                                            weeks[weekIndex].Dates[dayIndex].Type = buttonvalue;
+                                            dates.Add(weeks[weekIndex].Dates[dayIndex]);
+                                        }
+                                    }
+                                    else if (toDate == day.IrrDate && day.Workday == false && dayIndex < 5)
+                                    {                                     
+                                        weeks[weekIndex].Dates[dayIndex].Type = "#ff0000";                                         
+                                    }
+                                }        
+                            }
+                            else
+                            {
+                                message = ($"Dátum: {toDate}  Már van elküldött szabadságigény erre a napra!");
+                            }
+                        }  
+                    }
+                }
+            }
+            LoadRequests();
+        }
+    }
+
+    private void GetButtonValue(string value)
+    {
+        buttonvalue = value;
+        isChecked0 = false;
+        isChecked1 = false;
+        isChecked2 = false;
+        isChecked3 = false;
+        isChecked4 = false;
+        isChecked5 = false;
+
+        switch (buttonvalue)
+        {
+            case "#ffffff":
+                isChecked0 = true;  // Select Option 0
+                break;
+            case "#e9bc7b":
+                isChecked1 = true;  // Select Option 1
+                break;
+            case "#fc6fa0":
+                isChecked2 = true;  // Select Option 2
+                break;
+            case "#0dcf35":
+                isChecked3 = true;  // Select Option 3
+                break;
+            case "#7fa7db":
+                isChecked4 = true;  // Select Option 4
+                break;
+            case "#ffff00":
+                isChecked5 = true;  // Select Option 5
+                break;
+        }
+    }
+    private void LoadRequests()
+    {
+        // remove dates if type changed or deselected (white)
+        foreach (var date in dates.Where(p => p.Type != ""))
+        {
+            if (_datesWithVacation != null)
+            {
+                foreach (var dateWV in _datesWithVacation)
+                {
+                    if ((dateWV.DateValue == date.DateValue && dateWV.Type != date.Type) || dateWV.Type == "#ffffff" || dateWV.status != 0)
+                    {
+                        _datesWithVacation.Remove(dateWV);
+                    }
+                }
+            }
+            //add new vacation request
+            if (date.Type != "#ffffff" && date.Type != "#ff0000" && date.status == 0)
+            {
+                //with HashSet
+                _datesWithVacation.Add(date);
+            }
+        }
+    }
+
+
+    private async Task SubmitRequests()
+    {
+        if (_datesWithVacation != null)
+        {
+            foreach (var date in _datesWithVacation)
+            {
+                date.status = 1; //date.Code = 1;  //status 0 = new / 1 = submitted(pending) / 2 = accepted / 3 = rejected
+                date.EmployeeId = id;
+
+                var response = await HttpClient.PostAsJsonAsync("DataManagement/AddVacationRequest", date);
+                // if (response.IsSuccessStatusCode)
+                // {
+                //     NavManager.NavigateTo("/uservacation");
+                // }
+                // else
+                // {
+                //     var errorResponse = await response.Content.ReadAsStringAsync();
+                //     Console.WriteLine($"Error: {response.StatusCode}, Message: {errorResponse}");
+                // }
+            }
+        }
+    }
+}

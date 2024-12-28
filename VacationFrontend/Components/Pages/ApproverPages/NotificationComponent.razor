@@ -1,0 +1,28 @@
+﻿<div class="notification" style="display:@(isVisible ? "block" : "none")">
+    @message
+</div>
+
+@code {
+    private string message;
+    private bool isVisible = false;
+
+    // Show the notification with a message
+    public void ShowMessage(string msg)
+    {
+        message = msg;
+        isVisible = true;
+
+        // Hide after 3 seconds
+        _ = HideNotificationAfterDelay();
+    }
+
+    private async Task HideNotificationAfterDelay()
+    {
+        await Task.Delay(10000); // Wait for 3 seconds
+        isVisible = false;
+        StateHasChanged(); // Re-render the component
+    }
+}
+
+
+

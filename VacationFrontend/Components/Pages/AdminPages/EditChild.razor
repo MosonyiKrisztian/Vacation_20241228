@@ -1,0 +1,68 @@
+﻿@page "/editchild"
+@using SharedDTO
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+
+<h3>Gyermek adatainak módosítása</h3>
+
+
+<div class="row">
+    <div class="col-md-4">
+        <EditForm Model="editChild" OnValidSubmit="UpdateChild" FormName="editChild" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="fn" class="form-label">Vezetéknév:</label>
+                <InputText id="fn" class="form-control" @bind-Value="editChild.FirstName" />
+                <ValidationMessage class="text-danger" For="()=>editChild.FirstName" />
+            </div>
+            <div class="mb-3">
+                <label for="ln" class="form-label">Keresztnév</label>
+                <InputText id="ln" class="form-control" @bind-Value="editChild.LastName" />
+                <ValidationMessage class="text-danger" For="()=>editChild.LastName" />
+            </div>
+            <div class="mb-3">
+                <label for="bd" class="form-label">Születési idő</label>
+                <InputDate id="bd" class="form-control" @bind-Value="editChild.DateOfBirth" />
+                <ValidationMessage class="text-danger" For="()=>editChild.DateOfBirth" />
+            </div>
+            <div class="mb-3">
+                <label for="da" class="form-label">Van fogyatékosság:</label><br />
+                <InputSelect id="da" class="form-control" @bind-Value="editChild.Disability">
+                    <option value="0">Nem</option>
+                    <option value="1">Igen</option>
+                </InputSelect>
+            </div>
+
+
+
+            <button type="submit" class="btn btn-siker mb-4">Mentés</button>
+            <a href="/indexemployee" class="btn btn-keres mb-4">vissza</a>
+        </EditForm>
+    </div>
+</div>
+
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private UpdateChildDTO? editChild { get; set; } = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        editChild = await HttpClient.GetFromJsonAsync<UpdateChildDTO>($"Account/SearchChild/{Id}");
+ 
+    }
+
+    private async Task UpdateChild()
+    {
+        await HttpClient.PatchAsJsonAsync($"Account/PatchChild/{Id}", editChild);
+        NavManager.NavigateTo("/indexchild");
+    }
+
+}

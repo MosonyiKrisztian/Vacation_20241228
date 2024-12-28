@@ -1,0 +1,117 @@
+﻿@page "/"
+@using BlazorApp.Components.Pages
+@using SharedDTO
+@using BlazorApp.Model
+@layout Layout.BaseLayout
+@inject BaseItem BaseItem
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+
+<body class="pic">
+
+    <div class="cim">
+        <h1>SZABADSÁGTERVEZŐ</h1>
+    </div>
+
+    <div class="enter">
+        @if (_isProcessing)
+        {
+            <div class="overlay position-fixed"></div>
+            <div class="loading-wrapper d-flex justify-content-center align-baseline align-items-center"></div>
+            <div class="loading-text fs-1 text-white">Logging-in...</div>
+        }
+
+        <EditForm Model="login" OnValidSubmit="HandleLogin" FormName="LoginForm" Enhance>
+            <DataAnnotationsValidator />
+            <div class="container mt-5 d-flex justify-content-center nagydoboz">
+                <div class="card doboz" style="max-width: 450px">
+                    <div class="card-hearder">
+                        <h2>Belépés a programba</h2>
+                    </div>
+                    <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Email cím:</label>
+                            <InputText @bind-Value="login.Email" class="form-control placeh" placeholder="Kérem adja meg e-mail címét!" />
+                            <ValidationMessage For="()=>login.Email" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jelszó:</label>
+                            <InputText type="password" @bind-Value="login.Password" class="form-control placeh" placeholder="Kérem adja meg jelszavát!" />
+                            <ValidationMessage For="()=>login.Password" />
+                    </div>
+                        @if (!string.IsNullOrWhiteSpace(Error))
+                        {
+                            <p class="text-danger">@Error</p>
+                        }
+                    </div>
+                    <div class="card-footer pt-4">
+                        <div class="gomb">
+                            <button type="submit" class="btnbelep">Belép</button>
+                        </div>
+                        <div class="gomb">
+                            <a class="btnmegsem" href="/">Mégsem</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</body>
+
+
+
+@code {
+
+    [SupplyParameterFromForm]
+
+    public LoginDTO login { get; set; } = new();
+
+    private bool _isProcessing = false;
+
+    private string? Error = null;
+
+    private async Task HandleLogin()
+    {
+        if (_isProcessing) return;
+
+        _isProcessing = true;
+
+        try
+        {
+            var response = await HttpClient.PostAsJsonAsync("/Login/Login", login);
+            if (!response.IsSuccessStatusCode)
+            {
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    Error = "Érvénytelen email vagy jelszó.";
+                }
+                else
+                {
+
+                    Error = "Hiba.";
+                }
+                return;
+            }
+            var id = await response.Content.ReadFromJsonAsync<EmployeeDTO>();
+
+            if (id?.EmployeeId == null)
+            {
+                Error = "A felhasználó adatai nem érkeztek meg.";
+                return;
+            }
+            NavManager.NavigateTo($"/uservacation/{id.EmployeeId}");
+        }
+
+        finally
+        {
+            _isProcessing = false;
+        }
+     
+    }
+}
+
+
+

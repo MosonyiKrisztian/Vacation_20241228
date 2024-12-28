@@ -1,0 +1,6 @@
+@Vacation_HostAddress = http://localhost:5122
+
+GET {{Vacation_HostAddress}}
+Accept: application/json
+
+###

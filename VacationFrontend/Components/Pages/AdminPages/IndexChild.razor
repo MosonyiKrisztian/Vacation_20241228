@@ -1,0 +1,50 @@
+﻿@page "/indexchild"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using SharedDTO
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+
+<h3>Gyerekek</h3>
+@if (childGrid is null)
+{
+    <p>Loading....</p>
+}
+else
+{
+    <a href="/addchild" class="btn btn-siker w-25 mt-3 m-5 d-flex align-items-center">Új Gyermek</a>
+         <a href="/indexemployee" class="btn btn-keres mb-4">vissza</a>
+    <div class="quickgrid text-white">
+        <QuickGrid Class="table text-white" ItemsProvider="@childGrid">
+            <PropertyColumn Title="Vezetéknév" Property="@(p=>p.FirstName)" />
+            <PropertyColumn Title="Keresztnév" Property="@(p=>p.LastName)" />
+            <PropertyColumn Title="Születési idő" Property="@(p=>p.DateOfBirth)" />
+            <TemplateColumn Context="child">
+               <a href="@($"/editchild?Id={child.ChildId}")" class="btn btn-keres">Módosít</a>
+            </TemplateColumn>
+        </QuickGrid>
+    </div>
+}
+
+
+@code {
+    List<ChildDTO> childList = new();
+    GridItemsProvider<ChildDTO>? childGrid;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        childList = await HttpClient.GetFromJsonAsync<List<ChildDTO>>("Account/ChildGet");
+
+
+        childGrid = async request =>
+        {
+            return GridItemsProviderResult.From(childList, childList.Count);
+        };
+    }
+
+}
+
+

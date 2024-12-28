@@ -1,0 +1,63 @@
+﻿@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<button class="navbar-toggler" @onclick="ToggleNavMenu">
+    <span class="navbar-toggler-icon"></span>
+</button>
+
+<div class="navbar-nav-scroll @(collapseNavMenu ? "" : "show")">
+    <nav class="d-flex flex-row justify-content-between align-items-center flex-grow-1">
+        <div class="nav-item-img">
+            <img class="nav-item m-1 p-1" src="Img/calendar.png" width="70" height="70"  alt="" />
+        </div>
+        <NavLink class="nav-item nav-link" href="/" Match="NavLinkMatch.All">
+            <span class="ep--sunny" aria-hidden="true"></span>Kezdőoldal
+        </NavLink>
+        <NavLink class="nav-item nav-link" href="/uservacation">
+            <span class="ep--sunny" aria-hidden="true"></span>Szabadságtervezés
+        </NavLink>
+        <NavLink class="nav-item nav-link" href="/approverlogin">
+            <span class="ep--sunny" aria-hidden="true"></span> Engedélyezés
+        </NavLink>
+        <NavLink class="nav-item nav-link" href="/indexemployee">
+            <span class="ep--sunny" aria-hidden="true"></span> Admin felület
+        </NavLink>
+        <NavLink class="nav-item nav-link" href="/details">
+            <span class="ep--sunny" aria-hidden="true"></span> Info
+        </NavLink>
+        <button class="btn btn-close nav-item" @onclick="@(() => Navigation.NavigateTo("/logout"))"></button>
+    </nav>
+</div>
+
+
+
+@code {
+    bool[] showSubMenu = { false, false };
+    private bool collapseNavMenu = true;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    // void ToggleSubMenu(int index)
+    // {
+    //     for (int i = 0; i < showSubMenu.Length; i++)
+    //     {
+    //         showSubMenu[i] = false;
+    //     }
+
+    //     showSubMenu[index] = true;
+    // }
+
+    void CloseMenu()
+    {
+        collapseNavMenu = true;
+        for (int i = 0; i < showSubMenu.Length; i++)
+        {
+            showSubMenu[i] = false;
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+}

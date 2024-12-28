@@ -1,0 +1,49 @@
+﻿.button {
+    justify-content: center;
+    align-items: center;
+}
+.grid-container {
+    display: grid;
+    grid-template-columns: auto auto;
+}
+.btn-uservacation {
+    justify-content: center;
+    font-size: calc(0.8cqw + 1rem);
+    background-image: linear-gradient(to bottom right, green, darkgray);
+    margin-inline:auto;
+    margin-top: 4rem;
+    padding: 1rem;
+    border-radius: 2rem;
+    font-weight: bold;
+    white-space: nowrap;
+    color: white;
+    display: flex;
+    text-align: center;
+    width:80%;
+}
+    .btn-uservacation:hover {
+        color: white;
+    }
+.btn-planlist {
+    justify-content: center;
+    font-size: calc(0.8cqw + 1rem);
+    background-image: linear-gradient(to bottom right, red, darkgray);
+    margin-top: 4rem;
+    margin-inline: auto;
+    padding: 1rem;
+    border-radius: 2rem;
+    font-weight: bold;
+    white-space: nowrap;
+    color: white;
+    display: flex;
+    text-align: center;
+    width: 80%;
+}
+
+    .btn-planlist:hover {
+        color: white;
+
+    }
+.footer {
+    font-size: calc(1cqw + 0.5rem);
+}

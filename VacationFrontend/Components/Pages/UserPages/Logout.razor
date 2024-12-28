@@ -1,0 +1,26 @@
+﻿@page "/logout"
+@layout Layout.BaseLayout
+@using Microsoft.AspNetCore.Authentication
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+<div>
+<div class="row">
+    <div class="col-12">
+            <div class="card-body flex-column">
+                <div class="text-center">
+                        <img src="/Img/logout.png" style="max-height:5rem" />
+                        <p class="text text-center fw-bold fs-2">A kijelentkezés sikeres volt</p>
+                        <a href="/" class="btn-logout text-center">Kezdőoldal</a>
+                </div>
+            </div>           
+    </div>
+</div>
+</div>
+
+
+@code 
+    {
+        
+}
+

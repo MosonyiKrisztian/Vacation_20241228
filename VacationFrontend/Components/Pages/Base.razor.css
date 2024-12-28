@@ -1,0 +1,201 @@
+﻿.overlay {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: black;
+    opacity: 0.5;
+    z-index: 1050
+}
+
+.loading-wrapper {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: black;
+    opacity: 0.5;
+    z-index: 2000
+}
+
+.pic {
+    flex-basis: 110dvh;
+    background-image: url("/Img/napt.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: antiquewhite;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.cim {
+    border: white groove;
+    position: relative;
+    animation-name: focim;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+    padding: 0;
+}
+
+.enter {
+    position: relative;
+    animation-name: belep;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+}
+
+.footer {
+    text-decoration: none ;
+}
+
+h1 {
+    color: rgb(12, 27, 98);
+    font-weight: bold;
+    font-size: 7dvw;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: white 0.1dvw 0.1dvw 1px,#047a8f 0.5dvw 0.5dvw 1px;
+    padding: 2dvw;
+    position: relative;
+}
+
+    h1::before {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backdrop-filter: blur(10px);
+        transform: rotateY(30deg); 
+        padding: 2dvw;
+    }
+
+    h1::after {
+        content: "SZABADSÁGTERVEZŐ";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backdrop-filter: blur(25px);
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2vw;
+    }
+
+    h1 > span {
+        font-size: 70%;
+    }
+
+.card-header {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+}
+
+h2 {
+    padding: 1rem 3rem;
+    color: midnightblue;
+    font-weight: bold;
+    font-size: 2rem;
+    text-decoration-line: underline;
+}
+
+.form-label {
+    color: midnightblue;
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.form-control {
+    color: midnightblue;
+}
+
+.doboz {
+    border: midnightblue solid;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+}
+
+.btnbelep {
+    width: 8rem;
+    padding: 0.5rem;
+    margin: 0.5dvw;
+    background-color: midnightblue;
+    text-align: center;
+    font-size: 2dvh;
+    color: white;
+    font-weight: bold;
+    border-color: midnightblue;
+    border-style: double;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.btnmegsem {
+    width: 8rem;
+    padding: 0.5rem;
+    margin: 0.5dvw;
+    background-color: darkgrey;
+    text-align: center;
+    font-size: 2dvh;
+    color: white;
+    font-weight: bold;
+    border-color: darkgrey;
+    border-style: double;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.btnbelep:hover {
+    background-color: #047a8f;
+    text-align: center;
+    font-size: 2.2dvh;
+    font-weight: bold;
+}
+
+.btnmegsem:hover {
+    background-color: dimgrey;
+    text-align: center;
+    font-size: 2.2dvh;
+    font-weight: bold;
+}
+
+.gomb {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes focim {
+    from {
+        top: 100dvh;
+    }
+
+    to {
+        top: 0dvh;
+    }
+}
+
+@keyframes belep {
+    from {
+        top: 100dvh;
+    }
+
+    to {
+        top: 0dvh;
+    }
+}

@@ -1,0 +1,111 @@
+﻿
+@page "/indexchildemployee"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using SharedDTO
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+<h3>Munkavállaló gyermeke(i)</h3>
+
+@if (childemployeeGrid is null)
+{
+    <p>Loading....</p>
+}
+else
+{
+    <a href="/addchildemployee" class="btn btn-siker">Új Gyermek/Szülő</a>
+    <a href="/indexemployee" class="btn btn-keres mb-4">vissza</a>
+    <div class="quickgrid">
+        <QuickGrid Class="table" ItemsProvider="@childemployeeGrid">
+            <PropertyColumn Title="Id" Property="@(p=>p.EmployeeId)" Sortable="true" />
+            <PropertyColumn Title="Vezetéknév" Property="@(p=>p.LastName)" Sortable="true"/>
+            <PropertyColumn Title="Keresztnév" Property="@(p=>p.FirstName)" Sortable="true" />
+            <PropertyColumn Title="Születési ideje" Property="@(p=>p.DateOfBirth)" Format="yyyy-MM-dd" />
+            <TemplateColumn Title="Gyermek Id" Context="employees">
+                @foreach (var item in employees.ChildrenId)
+                {
+                    <spam>@item</spam>
+                    @if (item != employees.ChildrenId.Last())
+                    {
+                        <spam>; </spam>
+                    }
+
+                }
+            </TemplateColumn>
+            <TemplateColumn Title="Gyermekek neve" Context="employees">
+ 
+            @foreach (var item in childEmployeeList)
+            {
+                @if (item.EmployeeId != prevEmpId)
+                    {
+                        counter = 0;
+                    }
+                prevEmpId = item.EmployeeId;
+            }
+            @foreach (var CLN in employees.ChildrenLastName)
+            {
+                string name = CLN;
+                name = name + " " + employees.ChildrenFirstName[counter] + "; ";
+                <spam>@name</spam>
+                counter++;
+            }
+
+            </TemplateColumn>
+           
+        </QuickGrid>
+        
+    </div>
+}
+
+
+@code {
+    public List<ChildEmployeeDTO> childEmployeeList = new();
+    GridItemsProvider<ChildEmployeeDTO>? childemployeeGrid;
+    private string errormessage = string.Empty;
+    private bool isLoading = false;
+    public int counter = 0;
+    public int prevEmpId;
+
+    public List<string> ChildFirstName = new List<string>();
+
+    private List<ChildEmployeeDTO> pivotData = new();
+
+    protected override async Task OnInitializedAsync()
+
+    {
+        await LoadChildEmployeeAsync("Account/ChildEmployeeGet");
+    }
+
+    private async Task LoadChildEmployeeAsync(string url)
+    {
+        errormessage = string.Empty;
+        if (isLoading)
+            return;
+
+        isLoading = true; 
+
+        try
+        {
+            childEmployeeList = await HttpClient.GetFromJsonAsync<List<ChildEmployeeDTO>>(url);               
+            UpdateGrid();
+        }
+        catch (Exception ex)
+        {
+            errormessage = $"Nincs ilyen munkavállaló: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;  
+        }
+    }
+
+    private void UpdateGrid()
+    {
+        childemployeeGrid = async request =>
+       {
+           return GridItemsProviderResult.From(childEmployeeList, childEmployeeList.Count);
+       };
+    }
+}
+

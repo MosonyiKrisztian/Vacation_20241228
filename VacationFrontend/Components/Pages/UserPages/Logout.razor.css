@@ -1,0 +1,10 @@
+﻿.col-12{
+    padding:0;
+}
+.text {
+    color: white;
+    font-family: 'Century Gothic';
+}
+.btn-logout{
+    display:initial;
+}

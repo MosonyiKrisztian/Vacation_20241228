@@ -1,0 +1,124 @@
+﻿@page "/indexirregulardays"
+@using SharedDTO
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+
+<h3>Áthelyezett munkanapok és ünnepek </h3>
+<div class="d-flex justify-content-center align-items-center mt-5">
+    <a href="@($"/addirregularday")" class="btn btn-siker m1">Új dátum</a>
+    <a href="/indexemployee" class="btn btn-keres d-flex align-items-center m-1 ">Vissza</a>
+</div>
+
+<div class="d-flex justify-content-center m-4">
+    <div>
+        Szűkítés év szerint:
+        <input class="border-4 w-1/3 rounded m-6 p-6 h-8 border-blue-150"
+               @bind-value="searchYear"
+               @bind-value:event="oninput" />
+    </div>
+</div>
+<div class="row">
+    <QuickGrid Class="table" Items="Filteredirregulardate" style="width:fit-content">
+        <PropertyColumn Title="Dátum" Property="@(x=>x.IrrDate)" Format="yyyy.MM.dd" Sortable="true" />
+        <TemplateColumn title="Munkanap I/N">
+            @if (context.Workday)
+            {
+                <input type="checkbox" disabled checked />
+            }
+            else
+            {
+                <input type="checkbox" disabled unchecked />
+            }
+        </TemplateColumn>
+        <TemplateColumn Context="context">
+            @*  <a @onclick="async() => await DeleteIrregularDay(context)" class="btn btn-danger">Törlés</a> *@
+            <a @onclick="@(() => DeleteIrregularDay(context))" class="btn btn-danger">Törlés</a>   @*apikötés hiányzik még*@
+        </TemplateColumn>
+    </QuickGrid>
+</div>
+    
+
+@code {
+    List<IrregularDaysDTO> irregulardayslist = new();
+    // GridItemsProvider<IrregularDaysDTO>? irregulardayGrid;
+    // private DateTime searchIrregularDay;
+    private bool isLoading = false;
+
+    public int searchYear { get; set; } = DateTime.Now.Year;
+    private int irrDate { get; set; }
+    private IrregularDaysDTO deleteIrreularDay;
+    string errorMessage = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await TaskLoadIrregularDaysAsync("Vacation/IrregularDay");
+    }
+
+    private async Task TaskLoadIrregularDaysAsync(string url)
+    {
+        errorMessage = string.Empty;
+        if (isLoading)
+            return;
+
+        try
+        {
+            irregulardayslist = await HttpClient.GetFromJsonAsync<List<IrregularDaysDTO>>(url);
+            // UpdateGrid();
+        }
+        catch (Exception e)
+        {
+            errorMessage = $"A keresésre nincs találat: {e.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // private void UpdateGrid()
+    // {
+    //     irregulardayGrid = async request =>
+    //     {
+    //         return GridItemsProviderResult.From(irregulardayslist, irregulardayslist.Count);
+    //     };
+    // }
+
+    IQueryable<IrregularDaysDTO> Filteredirregulardate
+    {
+        get
+        {
+            var result = irregulardayslist.AsQueryable();
+            if (searchYear > 0)
+            {
+                result = result.Where(r => r.IrrDate.Year == searchYear);
+            }
+            //RecordNr = result.Count();
+            return result;
+        }
+    }
+
+    public async Task DeleteIrregularDay(IrregularDaysDTO day)
+    {
+        try
+        {
+            var response = await HttpClient.DeleteAsync($"IrregularDayDelete/{irrDate}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                NavManager.NavigateTo("/");
+            }
+            else
+            {
+                NavManager.NavigateTo("/error");
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Hiba történt a feldolgozás alatt {ex.Message}";
+        }
+    }
+}

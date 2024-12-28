@@ -1,0 +1,48 @@
+﻿@page "/editdepartment"
+@using SharedDTO
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+
+<h3>Részleg nevének módosítása</h3>
+
+
+<div class="row">
+    <div class="col-md-4">
+        <EditForm Model="editDepartment" OnValidSubmit="UpdateDepartment" FormName="editDepartment" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="dd" class="form-label">Megnevezés:</label>
+                <InputText id="fn" class="form-control" @bind-Value="editDepartment.DepartmentDescription" />
+                <ValidationMessage class="text-danger" For="()=>editDepartment.DepartmentDescription" />
+            </div>
+            <button type="submit" class="btn btn-siker mb-4">Mentés</button>
+            <a href="/indexdepartment" class="btn btn-keres mb-4">vissza</a>
+        </EditForm>
+    </div>
+</div>
+
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private UpdateDepartmentDTO? editDepartment { get; set; } = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        editDepartment = await HttpClient.GetFromJsonAsync<UpdateDepartmentDTO>($"Account/SearchDepartment/{Id}");
+
+    }
+
+    private async Task UpdateDepartment()
+    {
+        await HttpClient.PatchAsJsonAsync($"Account/PatchDepartment/{Id}", editDepartment);
+        NavManager.NavigateTo("/indexdepartment");
+    }
+
+}

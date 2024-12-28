@@ -1,0 +1,143 @@
+﻿@page "/addchildemployee"
+@using Microsoft.EntityFrameworkCore
+@using SharedDTO
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+
+@rendermode InteractiveServer
+
+
+<h3>Munkavállaló-gyermeke(i)</h3>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <EditForm Model="newChildEmployee " OnValidSubmit="AddnewChildEmployee" FormName="AddnewChildEmployee" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="dselect" class="form-label">Gyerek:</label>
+                <InputSelect id="dselect" class="form-control" @bind-Value="newChildEmployee.ChildrenId">
+                    <option value="" disabled selected></option>
+                    @foreach (var child in childList)
+                    {
+                        <option value="@child.ChildId">@child.FirstName @child.LastName</option>
+                    }
+                </InputSelect>
+            </div>
+                      
+            <div class="mb-3">
+                <label for="dselect" class="form-label">Munkavállaló:</label>
+                <InputSelect id="dselect" class="form-control" @bind-Value="newChildEmployee.EmployeeId" >
+                    
+                    <option value="" disabled selected></option>
+                    @foreach (var employee in employeeList)
+                    {
+                        <option value="@employee.EmployeeId">@employee.FirstName @employee.LastName</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <button type="submit" class="btn btn-siker mb-4">Mentés</button>
+            <a href="/indexemployee" class="btn btn-keres mb-4">vissza</a>
+        </EditForm>
+
+        <p>@errorMessage</p>
+    </div>
+</div>
+
+
+
+
+
+
+@code {
+
+
+    [SupplyParameterFromForm]
+    public ChildEmployeeDTO newChildEmployee { get; set; } = new();
+
+
+    private List<ChildDTO> childList = new();
+    private List<EmployeeDTO> employeeList = new();
+
+ 
+
+    private string errorMessage = string.Empty;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadChildAsync ("Account/ChildGet");
+        await LoadEmployeeAsync("Account/EmployeeGet");
+    }
+
+    
+    private async Task LoadChildAsync(string url)
+    {
+        errorMessage = string.Empty;
+
+        if (isLoading)
+            return;
+
+        isLoading = true;
+
+        try
+        {
+            childList = await HttpClient.GetFromJsonAsync<List<ChildDTO>>(url);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Az adat nem tölthető be! {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadEmployeeAsync(string url)
+    {
+        errorMessage = string.Empty;
+
+        if (isLoading)
+            return;
+
+        isLoading = true;
+
+        try
+        {
+            employeeList = await HttpClient.GetFromJsonAsync<List<EmployeeDTO>>(url);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Az adat nem tölthető be! {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public async Task AddnewChildEmployee()
+    {
+        var response = await HttpClient.PostAsJsonAsync("Account/AddChildEmployee ", newChildEmployee);
+        if (response.IsSuccessStatusCode)
+        {
+            NavManager.NavigateTo("/indexemployee");
+        }
+        else
+        {
+            var errorResponse = await response.Content.ReadAsStringAsync();
+            errorMessage=($"Error: {response.StatusCode}, Message: {errorResponse}");
+        }
+      
+    }
+   
+
+}
+
+
+
+
+
+

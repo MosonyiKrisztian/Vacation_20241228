@@ -1,0 +1,119 @@
+﻿@page "/indexemployee"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using SharedDTO
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+
+<h3> Munkavállalók</h3>
+<div class="row">
+@if (employeeGrid is null)
+{
+    <p>Loading....</p>
+}
+else
+{
+    <div class="row ">
+        
+        <div class="keres d-inline-flex">
+        <EditForm  Model="searchEmployee" OnValidSubmit="Search" FormName="Search" Enhance>
+                <div class="mt-3 md-3 d-flex align-items-center justify-content-evenly">
+                    <button type="submit" class="btn btn-keres order-1">Keresés</button>
+                    <InputText id="sch" @bind-Value="searchEmployee" class="form-control"/>
+                </div>
+                <div class="text-danger"><strong>@errormessage</strong></div>
+             
+        </EditForm>
+        </div>
+    </div>
+    <div class="gombok d-flex">
+            <a href="/addemployee" class="btn btn-siker w-25 mt-3 m-5 d-flex align-items-center">Új Munkavállaló</a>
+            <a href="/indexchild" class="btn btn-siker w-25 mt-3 m-5 d-flex align-items-center">Gyermek</a>
+            <a href="/indexchildemployee" class="btn btn-siker w-25 mt-3 m-5 d-flex align-items-center">Munkavállaló-Gyermek</a>
+            <a href="/indexdepartment" class="btn btn-siker w-25 mt-3 m-5 d-flex align-items-center">Részleg</a>
+            <a href="/indexirregulardays" class="btn btn-siker w-25 mt-3 m-5 d-flex align-items-center">Egyéb Napok</a>
+           
+    </div>
+    <div class="munkavallalo d-flex-grid">
+        <QuickGrid Class="table text-white" ItemsProvider="@employeeGrid">
+            <PropertyColumn  class="accordion-header" Title="Vezetéknév" Property="@(n=>n.FirstName)"/>
+            <PropertyColumn Title="Keresztnév" Property="@(n=>n.LastName)" />
+            <PropertyColumn Title="Születési dátum" Property="@(sz=>sz.DateOfBirth)" Format="yyyy.MM.dd" />
+            <TemplateColumn Context="employee">
+                <a href="@($"/editemployee?Id={employee.EmployeeId}")" class="btn btn-keres">Módosít</a>
+            </TemplateColumn>
+        </QuickGrid>
+        </div>
+}
+</div>
+
+
+@code {
+    List<EmployeeDTO> employeeList = new();
+    List<DepartmentDTO>? departmentList = new();
+
+    GridItemsProvider<EmployeeDTO>? employeeGrid;
+
+    private string searchEmployee= string.Empty;
+    private string errormessage = string.Empty;
+    private bool isLoading = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await LoadEmployeeAsync("Account/EmployeeGet");
+    }
+
+    
+    private async Task LoadEmployeeAsync(string url)
+    {
+        errormessage = string.Empty;
+        //ha már fut a folyamat akkor kilép
+        if (isLoading)
+            return;
+
+        isLoading = true; //jelöljük, hogy a folyamat már betöltött
+
+        try
+        {
+            employeeList = await HttpClient.GetFromJsonAsync<List<EmployeeDTO>>(url);
+            UpdateGrid();
+        }
+        catch (Exception ex)
+        {
+            errormessage = $"Nincs ilyen munkavállaló: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;  ///betöltés végén visszallítjuk az eredeti alapot
+        }
+    }
+
+    private void UpdateGrid()
+    {
+        employeeGrid = async request =>
+       {
+           return GridItemsProviderResult.From(employeeList, employeeList.Count);
+       };
+    }
+
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(searchEmployee))
+        {
+            errormessage = "A mező kitöltése kötelező!";
+        }
+        else
+        {
+            await LoadEmployeeAsync($"Account/SearchE/{searchEmployee}");
+            searchEmployee = string.Empty;
+        }
+    }
+
+    private async Task ResetSearch()
+    {
+        await LoadEmployeeAsync("Account/EmployeeGet");
+    }
+    }

@@ -1,0 +1,149 @@
+﻿@page "/addemployee"
+@using SharedDTO
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+
+<h3>Munkavállaló felvétele</h3>
+
+<div class="row mb-4" >
+    <div class="col-md-4">
+        <EditForm Model="newEmployee" OnValidSubmit="AddnewEmployee" FormName="AddnewEmployee" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="fn" class="form-label">Vezetéknév:</label>
+                <InputText id="fn" class="form-control" @bind-Value="newEmployee.FirstName" />
+                <ValidationMessage class="text-danger" For="()=>newEmployee.FirstName" />
+            </div>
+            <div class="mb-3">
+                <label for="ln" class="form-label">Keresztnév:</label>
+                <InputText id="ln" class="form-control" @bind-Value="newEmployee.LastName" />
+                <ValidationMessage class="text-danger" For="()=>newEmployee.LastName" />
+            </div>
+            <div class="mb-3">
+                <label for="bd" class="form-label">Születési idő:</label>
+                <InputDate id="bd" class="form-control" @bind-Value="newEmployee.DateOfBirth" />
+                <ValidationMessage class="text-danger" For="()=>newEmployee.DateOfBirth" />
+            </div>
+            <div class="mb-3">
+                <label for="mn" class="form-label">Anyja neve:</label>
+                <InputText id="mn" class="form-control" @bind-Value="newEmployee.NameOfMother" />
+                <ValidationMessage class="text-danger" For="()=>newEmployee.NameOfMother" />
+            </div>
+            <div class="mb-3">
+                <label for="in" class="form-label">TAJ szám:</label>
+                <InputText id="in" type="text" class="form-control" @bind-Value="newEmployee.InsuranceNumber"/>
+                <ValidationMessage class="text-danger" For="()=>newEmployee.InsuranceNumber" />
+            </div>
+            <div class="mb-3">
+                <label for="se" class="form-label">Alkalmazás kezdte:</label>
+                <InputDate id="se" class="form-control" @bind-Value="newEmployee.StartOfEmployment" />
+                <ValidationMessage class="text-danger" For="()=>newEmployee.StartOfEmployment" />
+            </div>
+            <div class="mb-3">
+                <label for="da" class="form-label">Van fogyatékosság:</label><br/>
+                <InputSelect id="da" class="form-control" @bind-Value="newEmployee.Disability">
+                    <option value="0">Nem</option>
+                    <option value="1">Igen</option>
+                </InputSelect>
+            </div>
+            <div class="mb-3">
+                <label for="dselect" class="form-label">Részleg:</label>
+                <InputSelect id="dselect" class="form-control" @bind-Value="newEmployee.DepartmentID">
+                    <option value="" disabled selected>Válaszd ki a részleget:</option>
+                    @foreach (var department in departmentList)
+                    {
+                        <option value="@department.DepartmentID">@department.DepartmentDescription</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="mb-3">
+                <label for="rselect" class="form-label">Szerepkör:</label>
+                <InputSelect id="rselect" class="form-control" @bind-Value="newEmployee.Role">
+                    <option value="" disabled selected>Válaszd ki a megfelelő szerepkört!</option>
+                    <option value="Admin">Adminisztrátor</option>
+                    <option value="Approver">Jóváhagyó</option>
+                    <option value="User">Felhasználó</option>
+                </InputSelect>
+            </div>
+            <button type="submit" class="btn btn-siker mb-4">Mentés</button>
+            <a href="/indexemployee" class="btn btn-keres mb-4">vissza</a>
+        </EditForm>
+    </div>
+</div>
+
+
+
+
+
+
+@code {
+
+
+    [SupplyParameterFromForm]
+    public EmployeeDTO newEmployee { get; set; } = new();
+
+
+    private bool isChecked
+    {
+        get => newEmployee.Disability != 0? true:false; // Convert int to bool
+        set => isChecked = value; // Convert bool back to int
+    }
+
+
+    private List<DepartmentDTO> departmentList = new();
+
+    private string errorMessage = string.Empty;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDepartmentAsync("Account/DepartmentGet");
+    }
+
+    private async Task LoadDepartmentAsync(string url)
+    {
+        errorMessage = string.Empty;
+
+        if (isLoading)
+            return;
+
+        isLoading = true; 
+
+        try
+        {
+            departmentList = await HttpClient.GetFromJsonAsync<List<DepartmentDTO>>(url);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Az adat nem tölthető be! {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false; 
+        }
+    }
+
+    public async Task AddnewEmployee()
+    {
+        var response = await HttpClient.PostAsJsonAsync("Account/AddEmployee", newEmployee);
+        if (response.IsSuccessStatusCode)
+        {
+            NavManager.NavigateTo("/indexemployee");
+        }
+        else
+        {
+            var errorResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Error: {response.StatusCode}, Message: {errorResponse}");
+        }
+    }
+
+   
+}
+
+
+
+
+

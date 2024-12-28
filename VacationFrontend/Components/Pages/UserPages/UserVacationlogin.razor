@@ -1,0 +1,137 @@
+﻿@page "/uservacation/{id:int}"
+
+@using SharedDTO
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@using VacationFrontend.Calculation
+@rendermode InteractiveServer
+
+<PageTitle>UserVacation</PageTitle>
+
+<div class="page">
+    <h3><span>SZABADSÁGTERVEZŐ</span></h3>
+</div>
+
+<div>
+    @foreach (var emp in employeeList)
+    {
+        <div class="employee-section">
+       
+            <!-- Alapadatok, elrejthetők -->
+
+            <div >
+                <div class="nev">@emp.FirstName @emp.LastName</div>
+            </div>
+            <details>
+              
+                    <summary>Alapadatok:</summary>
+                         <div class="alapadatok"> 
+                    <div class="alapadatokfeher">
+                        <span>Születési idő:</span>
+                        <div class="alapadatokkek">@emp.DateOfBirth.ToString("yyyy-MM-dd")</div>
+                    </div>
+                    <div class="alapadatokfeher">
+                        <span>Anyja neve:</span>
+                        <div class="alapadatokkek">@emp.NameOfMother</div>
+                    </div>
+                    <div class="alapadatokfeher">
+                        <span>TAJ szám:</span>
+                        <div class="alapadatokkek">@emp.InsuranceNumber</div>
+                    </div>
+                    <div class="alapadatokfeher" id="utolsofeher">
+                        <span>Első munkanap:</span>
+                        <div class="alapadatokkek">@emp.StartOfEmployment.ToString("yyyy-MM-dd")</div>
+                    </div>
+                </div>
+            </details>
+           
+            <div class="szabidoboz">
+                <div class="szabifeher">
+                    <span>Alapszabadság:</span>
+                    <div class="szabikek">@vacationNr.GetVacationNr(emp)["alapszabadasag"] nap</div>
+                </div>
+                <div class="szabifeher">
+                    <span>Pótszabadság életkor alapján:</span>
+                    <div class="szabikek">@vacationNr.GetVacationNr(emp)["potkorszabadasag"] nap</div>
+                </div>
+                <div class="szabifeher">
+                    <span>Fiatal munkavállaló:</span>
+                    <div class="szabikek">@vacationNr.GetVacationNr(emp)["fiatalmvallalosz"] nap</div>
+                </div>
+                <div class="szabifeher">
+                    <span>Gyermekek után:</span>
+                    <div class="szabikek">@vacationNr.GetVacationNr(emp)["gyerekszabadasag"] nap</div>
+                </div>
+                <div class="szabifeher">
+                    <span>Fogyatékosság miatt:</span>
+                    <div class="szabikek">@vacationNr.GetVacationNr(emp)["fogyatekszabadasag"] nap</div>
+                </div>
+                <div class="szabifeher">
+                    <span>Összesen:</span>
+                    <div class="szabikek">@vacationNr.GetVacationNr(emp)["totalszabadasag"] nap</div>
+                </div>
+                <div class="szabifeher">
+                    <span>Ebben az évben igénybevett szabadságnapok:</span>
+                    <div class="szabikek">@($"{usedVacationNr.GetUsedVacationNr(emp, requestList)}  nap"  ) </div>
+                </div>
+                <div class="szabifeher">
+                    <span>Felhasználható szabadság:</span>
+                    <div class="szabikek"> @($"{vacationNr.GetVacationNr(emp)["totalszabadasag"] - usedVacationNr.GetUsedVacationNr(emp, requestList) }  nap") </div>
+                </div>
+                <div class="btn-planner w-auto">
+                    <a class="btn-planner2 w-auto" href="/planner/@emp.EmployeeId">Szabadság igény</a>
+                    @* <a href="@($"planner/{id}")" class="btn btn-keres d-inline-flex">Szabadság igény</a> *@
+                </div>
+            </div>
+        </div>
+    }
+    
+</div>
+
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    //List<EmployeeDTO> employeeList
+    private EmployeeDTO? employee;
+
+    List<VacationCountDTO> employeeList = new();
+    List<ApproveRejectDTO> requestList = new();
+
+    public VacationCalculation usedVacationNr = new();
+    public VacationCalculation vacationNr = new();
+    public CurrentYear currentYear = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        { 
+            employeeList = await HttpClient.GetFromJsonAsync<List<VacationCountDTO>>("Vacation/VacationCount");
+            employeeList = employeeList.Where(x => x.EmployeeId == id).ToList();
+
+            requestList = await HttpClient.GetFromJsonAsync<List<ApproveRejectDTO>>($"/Vacation/EmployeeVacationRequest/{id}");
+            requestList = requestList.Where(x => x.employeeId == id).ToList();
+
+            var usedVacationNrx = requestList.Where(c => c.ToDate.Year.Equals(DateTime.Now.Year))
+                                .GroupBy(r => new
+                                {
+                                    r.employeeId,
+                                })
+                                .Select(group => new
+                                {
+                                    employeeId = group.Key,
+                                    requestCount = group.ToList()
+                                })
+                                .ToList();
+            foreach (var item in usedVacationNrx)
+            {
+                Console.WriteLine($"{item.employeeId.employeeId} , {item.requestCount.Count}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching data: {ex.Message}");
+        }
+    }
+}

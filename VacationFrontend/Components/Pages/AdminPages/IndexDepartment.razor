@@ -1,0 +1,48 @@
+﻿@page "/indexdepartment"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using SharedDTO
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+
+<h3>Részlegek</h3>
+@if (departmentGrid is null)
+{
+    <p>Loading....</p>
+}
+else
+{
+    <a href="/adddepartment" class="btn btn-siker w-25 mt-3 m-5 d-flex align-items-center">Új részleg</a>
+    <a href="/indexemployee" class="btn btn-keres mb-4">vissza</a>
+    <div class="quickgrid text-white">
+        <QuickGrid Class="table text-white" ItemsProvider="@departmentGrid">
+            <PropertyColumn Title="Részleg megnevezése:" Property="@(p=>p.DepartmentDescription)" />
+            <TemplateColumn Context="department">
+                <a href="@($"/editdepartment?Id={department.DepartmentID}")" class="btn btn-keres">Módosít</a>
+            </TemplateColumn>
+        </QuickGrid>
+    </div>
+}
+
+
+@code {
+    List<DepartmentDTO> departmentList = new();
+    GridItemsProvider<DepartmentDTO>? departmentGrid;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        departmentList = await HttpClient.GetFromJsonAsync<List<DepartmentDTO>>("Account/DepartmentGet");
+
+
+        departmentGrid = async request =>
+        {
+            return  GridItemsProviderResult.From(departmentList, departmentList.Count);
+        };
+    }
+
+}
+
+

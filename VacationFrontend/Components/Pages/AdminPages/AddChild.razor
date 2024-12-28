@@ -1,0 +1,78 @@
+﻿@page "/addchild"
+@using SharedDTO
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+
+<h3>Gyermek felvétele</h3>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <EditForm Model="newChild" OnValidSubmit="AddnewChild" FormName="AddnewChild" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="fn" class="form-label">Vezetéknév:</label>
+                <InputText id="fn" class="form-control" @bind-Value="newChild.FirstName" />
+                <ValidationMessage class="text-danger" For="()=>newChild.FirstName" />
+            </div>
+            <div class="mb-3">
+                <label for="ln" class="form-label">Keresztnév:</label>
+                <InputText id="ln" class="form-control" @bind-Value="newChild.LastName" />
+                <ValidationMessage class="text-danger" For="()=>newChild.LastName" />
+            </div>
+            <div class="mb-3">
+                <label for="bd" class="form-label">Születési idő:</label>
+                <InputDate id="bd" class="form-control" @bind-Value="newChild.DateOfBirth" />
+                <ValidationMessage class="text-danger" For="()=>newChild.DateOfBirth" />
+            </div>
+            <div class="mb-3">
+                <label for="da" class="form-label">Van fogyatékosság:</label><br />
+                <InputSelect id="da" class="form-control" @bind-Value="newChild.Disability">
+                    <option value="0">Nem</option>
+                    <option value="1">Igen</option>
+                </InputSelect>
+            </div>
+            <button type="submit" class="btn btn-siker mb-4">Mentés</button>
+            <a href="/indexemployee" class="btn btn-keres mb-4">vissza</a>
+        </EditForm>
+    </div>
+</div>
+
+
+
+
+
+@code {
+
+
+    [SupplyParameterFromForm]
+    public ChildDTO newChild { get; set; } = new();
+
+    private string errorMessage = string.Empty;
+    private bool isLoading = false;
+
+   
+    public async Task AddnewChild()
+    {
+        var response = await HttpClient.PostAsJsonAsync("Account/AddChild", newChild);
+        if (response.IsSuccessStatusCode)
+        {
+            NavManager.NavigateTo("/indexchild");
+        }
+        else
+        {
+            var errorResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Error: {response.StatusCode}, Message: {errorResponse}");
+        }
+    }
+
+
+}
+
+
+
+
+
+

@@ -1,0 +1,73 @@
+﻿.row {
+    justify-content: center;
+}
+.form-label {
+    color: white;
+    font-size: calc(0.5cqw + 1rem);
+}
+
+h3 {
+    color: white;
+    justify-content: center;
+    font-size: calc(2cqw + 1rem);
+    display: flex;
+    white-space: nowrap;
+    letter-spacing: 0.5cqw;
+    font-weight: bold;
+    margin: 2rem 8rem 0 8rem;
+    text-shadow: midnightblue 0.5dvw 0.5dvw 0.5px;
+}
+
+.btn-siker {
+    width: 8rem;
+    background-color: midnightblue;
+    border-color: darkgrey;
+    text-align: center;
+    font-size:1rem;
+    color: white;
+    font-weight: bold;
+    border-style: inset;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+   
+}
+
+    .btn-siker:hover {
+        background-color: white;
+        text-align: center;
+        font-weight: bold;
+        color: midnightblue;
+        border-color: white;
+        text-decoration-line: underline;
+    }
+
+.btn-keres {
+    width: 8rem;
+    background-color: darkgray;
+    border-color: darkgrey;
+    text-align: center;
+    font-size: 1rem;
+    color: black;
+    font-weight: bold;
+    border-style: inset;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+    .btn-keres:hover {
+        background-color: dimgrey;
+        text-align: center;
+        font-weight: bold;
+        text-decoration-line: underline;
+        color: white;
+    }
+.container-fluid{
+    width:80%;
+    justify-content:center;
+    align-content:center;
+    margin-inline:auto;
+}

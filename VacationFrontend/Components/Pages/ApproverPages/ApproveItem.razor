@@ -1,0 +1,276 @@
+﻿@page "/approveitem"
+@using Microsoft.AspNetCore.WebUtilities
+@using SharedDTO
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using VacationFrontend.Components.Pages.ApproverPages
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+@inject IJSRuntime Js
+@rendermode InteractiveServer
+
+<h3>Szabadságok kezelése</h3>
+
+<NotificationComponent @ref="notification" /> 
+
+@if (FilteredEmployee is null)
+{
+    <p>Loading....</p>
+}
+else
+{
+    <div>
+        <div class="d-inline-flex m-2">
+            <div>
+                Keresés:
+                <input class="border-4 w-1/3 rounded m-6 p-6 h-8
+                              border-blue-300" @bind-value="searchText"
+                       @bind-value:event="oninput"
+                       placeholder="Név/Év..." />
+            </div>
+            <div class="ms-2">
+                Rendezés:
+                <select @bind="selectedSortOption" id="orderbyvalue" class="border-4 w-1/3 rounded m-6 p-6 h-8
+                              border-blue-300 ms-2">
+                    <option value="">Nem rendezett</option>
+                    <option value="FirstName">Keresztnév</option>
+                    <option value="LastName">Vezetéknév</option>
+                    <option value="RequestDate">Igénylés dátuma</option>
+                    <option value="ToDate">Szabadság napja</option>
+                    <option value="status">Státusz</option> 
+                </select>
+            </div>
+            <div class="ms-2">
+                Csak függő:
+                <input type="checkbox" id="onlypending" 
+                       @bind-value="@IsChecked" 
+                       //@bind-value:after="CheckboxChanged" 
+                       class="border-4 w-1/3 rounded m-6 p-6 h-8 border-blue-300 ms-2"/>
+
+            </div>
+            <div class="ms-4" >
+               <label style="color:darkred;font-size:1.3rem;font-weight:700">@errorMessage</label>
+
+            </div>
+        </div>
+        <div class="approval-header">
+            <section class="col-2">Vezetéknév</section>
+            <section class="col-2">Keresztnév</section>
+            <section class="col-2">Igénylés dátuma</section>
+            <section class="col-2">Szabadság napja</section>
+            <section class="col-2">Státusz</section>
+            <section> <button @onclick="ChangeRequest" class="btn btn-siker"> Mind jóváhagy </button></section>
+        </div>
+
+        <div>
+            @foreach (var req in FilteredEmployee)
+            {
+
+                <EditForm Model="@req" OnValidSubmit="() => ChangeRequest(req.RequestId, req)" FormName="editVacationRequest" Enhance>
+                    <DataAnnotationsValidator />
+
+                    <div class="editformvacation">
+                        @* <div class="col-1">
+                            <InputNumber id="RequestId" class="form-control" @bind-Value="req.RequestId" disabled="true" />
+                            <ValidationMessage class="text-black" For="()=>req.RequestId" />
+                        </div> *@
+                        <div class="col-2">
+                            <InputText id="LastName" class="form-control" @bind-Value="req.LastName" disabled="true" />
+                            <ValidationMessage class="text-black" For="()=>req.LastName" />
+                        </div>
+                        <div class="col-2">
+                            <InputText id="FirstName" class="form-control" @bind-Value="req.FirstName" disabled="true" />
+                            <ValidationMessage class="text-black" For="()=>req.FirstName" />
+                        </div>
+                        <div class="col-2">
+                            <InputDate id="RequestDate" class="form-control" @bind-Value="req.RequestDate" disabled="true" />
+                            <ValidationMessage class="text-black" For="()=>req.RequestDate" />
+                        </div>
+                        <div class="col-2">
+                            <InputDate id="ToDate" class="form-control" @bind-Value="req.ToDate" disabled="true" />
+                            <ValidationMessage class="text-black" For="()=>req.ToDate" />
+                        </div>
+@*                         <div class="col-1">
+                            <InputNumber id="status" class="form-control" @bind-Value="req.status" disabled="true" />
+                            <ValidationMessage class="text-black" For="()=>req.status" />
+                        </div> *@
+                        <div class="col-2">
+                            @* <select @bind-value="@req.status" @bind-value:event="HandleOnChange" @onchange="(e) => HandleOnChange(req.RequestId, req)" id="statusId" class="form-control"> *@
+                            <select @bind="req.status"  id="statusId" class="form-control">
+                                <option value="1">Függőben</option>
+                                <option value="2">Jóváhagyott</option>
+                                <option value="3">Elutasított</option>
+                                <option value="4">Törölt</option>
+                            </select>
+                        </div>
+
+                        <div class="col-1">
+                            <button type="submit" class="btn btn-siker"> Módosít </button>
+                            @* <button type="submit" class="btn btn-info mb-4"> Elutasit </button> *@
+                        </div>
+                    </div>
+                </EditForm>
+            }
+        </div>
+    </div>
+
+    <div class="m-3 flex-md-row ">
+        <a href="@($"/approverlogin")" class="btn btn-keres mt-4">Vissza...</a>
+        <a href="@($"/overviewbyday")" class="btn btn-keres mt-4">Mátrix...</a>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsChecked { get; set; } = false;
+
+    public List<ApproveRejectDTO> vacationList = new();
+    public static List<ApproveRejectDTO> vacationListInit = new();
+    public IQueryable<ApproveRejectDTO> sortedItemsFinal;
+    public List<ApproveRejectDTO> sortedItems = new();
+    public List<ApproveRejectDTO> FilteredEmployeeList = new();
+    public List<string> statusList = new List<string>();
+    public string errorMessage;
+
+
+    public string? searchText = "";
+    public string? selectedSortOption { get; set; } = "";
+    private NotificationComponent notification;
+    public bool tempListFilled = false;
+
+    protected override async Task OnInitializedAsync()
+
+    {
+        vacationList = await HttpClient.GetFromJsonAsync<List<ApproveRejectDTO>>($"/Vacation/VacationRequest");
+
+        if (vacationListInit == null || !vacationListInit.Any())
+        {
+            vacationListInit = vacationList;
+        }
+    }
+
+    IQueryable<ApproveRejectDTO> FilteredEmployee
+    {
+        get
+        {
+            var result = vacationList.AsQueryable().Where(c => c.status == (IsChecked == true ? 1 : c.status));
+            // var result = vacationList.AsQueryable();
+            // var tempVacationList = vacationList.AsQueryable().Where(c => c.status == (IsChecked == true ? 1 : c.status));
+
+            // if (statusList.Count == 0)
+            // {
+            //     if (tempVacationList.Count() > 0)
+            //     {
+            //         foreach (var item in tempVacationList)
+            //         {
+            //             statusList.Add(item.RequestId.ToString() + ';' + item.status.ToString());
+            //         }
+            //     }   
+            // }
+
+
+            // if (IsChecked && string.IsNullOrEmpty(searchText) && string.IsNullOrEmpty(selectedSortOption))
+            // {
+            //     if (tempVacationList.Count() >0 )
+            //     {
+            //         for (int i = 0; i < tempVacationList.Count(); i++)
+            //         {
+            //             for (int j = 0; j < statusList.Count(); j++)
+            //             {
+            //                 if (tempVacationList.ToList()[i].employeeId == statusList[j][1])
+            //                 {
+            //                     tempVacationList.ToList()[i].status = statusList[j][2];
+            //                 }
+            //             }
+            //         } 
+            //         result = tempVacationList.AsQueryable();
+            //         //statusList.Clear();
+            //     }
+            //     //result = tempVacationList.AsQueryable();
+            // }
+
+            var propertyInfo = typeof(ApproveRejectDTO).GetProperty(selectedSortOption);
+            if (!string.IsNullOrEmpty(searchText) && string.IsNullOrEmpty(selectedSortOption))
+            {
+                result = result.Where(r => (r.LastName.Contains(searchText, StringComparison.CurrentCultureIgnoreCase) ||
+                                            r.FirstName.Contains(searchText, StringComparison.CurrentCultureIgnoreCase) ||
+                                            r.ToDate.Year.ToString() == searchText) &&
+                                            r.status == (IsChecked == true ? 1 : r.status));
+            }
+            if (string.IsNullOrEmpty(searchText) && !string.IsNullOrEmpty(selectedSortOption))
+            {
+                result = result.Where(r => (r.LastName.Any()) &&
+                                            r.status == (IsChecked == true ? 1 : r.status))
+                                            .OrderBy(x => propertyInfo.GetValue(x, null));
+            }
+            if (!string.IsNullOrEmpty(searchText) && !string.IsNullOrEmpty(selectedSortOption))
+            {
+                result = result.Where(r => (r.LastName.Contains(searchText, StringComparison.CurrentCultureIgnoreCase) ||
+                                            r.FirstName.Contains(searchText, StringComparison.CurrentCultureIgnoreCase) ||
+                                            r.ToDate.Year.ToString() == searchText) &&
+                                            r.status == (IsChecked == true ? 1 : r.status))
+                                            .OrderBy(x=>propertyInfo.GetValue(x, null));
+            }
+            return result;
+        }
+        //set{}
+    }
+
+    private async Task ChangeRequest(int id, ApproveRejectDTO actualrequest)
+    {
+
+        var response = await HttpClient.PatchAsJsonAsync($"/DataManagement/ApproveRejectRequest/{id}", actualrequest);
+
+        if (response.IsSuccessStatusCode)
+        {
+
+            foreach (var item in vacationListInit)
+            {
+                if (item.RequestId == id && item.status != actualrequest.status)
+                {
+                    NavManager.NavigateTo(NavManager.Uri, forceLoad: true);   
+                }
+            }
+            
+            //NavManager.NavigateTo("/");
+        }
+        else
+        {
+            errorMessage = response.RequestMessage.ToString();
+        }
+    }
+
+    private async Task ChangeRequest()
+    {
+        foreach (var item in FilteredEmployee)
+        {
+            foreach (var request in vacationListInit)
+            {
+                if (item.RequestId == request.RequestId && item.status == 1)
+                {
+                    item.status = 2;
+                    var response = await HttpClient.PatchAsJsonAsync($"/DataManagement/ApproveRejectRequest/{item.RequestId}", item);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        errorMessage = response.RequestMessage.ToString();
+                    }
+                    else
+                    {
+                        errorMessage = response.RequestMessage.ToString();
+                    }
+                } 
+            } 
+            //NavManager.NavigateTo("/");    
+        }
+        //NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+
+    }
+
+    private async Task ShowMessage()
+    {
+        await Task.Delay(TimeSpan.FromSeconds(2));
+        
+        StateHasChanged();
+        //notification.ShowMessage("This is a temporary message!");
+    }
+}

@@ -1,0 +1,94 @@
+﻿@page "/addirregularday"
+
+@using SharedDTO
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+
+<h3>Munkaszüneti napok</h3>
+
+<div class="row">
+    <div class="col-md-4">
+        <EditForm Model="newIrregularDay" OnValidSubmit="AddNewIrregularDay" FormName="AddnewIrregularDay" Enhance>
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label for="fn" class="form-label m-3">Dátum</label>
+                <InputDate id="fn" class="form-control" @bind-Value="newIrregularDay.IrrDate"/>
+                <ValidationMessage class="text-black" For="()=>newIrregularDay.IrrDate" />
+            </div>
+
+            <div class="mb-3">
+                <label for="cb" class="form-label">Munkanap I/N</label>
+                <InputCheckbox id="cb" class="form-check-input" @bind-Value="newIrregularDay.Workday" />
+                @* <ValidationMessage class="text-black" For="()=>newIrregularDay.Workday" /> *@
+            </div>
+
+
+@*             <div class="mb-3">
+                <label class="ms-3">Role:</label>
+                <InputSelect @bind-Value="newPlayer.TeamId" class="form-control">
+                    <option>Válassz egy csapatot</option>
+                    @foreach (var team in teamlist)
+                    {
+                        <option value="@team.TeamId">@team.TeamName</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="()=>newPlayer.TeamId" class="text-danger"></ValidationMessage>
+            </div> *@
+
+            <button type="submit" class="btn btn-siker mb-4"> Mentés </button>
+            <a href="/indexirregulardays" class="btn  btn-keres mb-4">Vissza</a>
+
+        </EditForm>
+    </div>
+</div>
+
+
+@code {
+    [SupplyParameterFromForm]
+    public IrregularDaysDTO newIrregularDay { get; set; } = new();
+    public DateTime today = DateTime.Now;
+
+    private List<IrregularDaysDTO> irregularDaylist = new();
+    private string errorMessage = String.Empty;
+    private bool isloading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadIrregularDayAsync("Vacation/IrregularDay");
+    }
+
+    private async Task LoadIrregularDayAsync(string url)
+    {
+        if (isloading)
+        {
+            return;
+        }
+
+        isloading = true;
+        try
+        {
+            irregularDaylist = await HttpClient.GetFromJsonAsync<List<IrregularDaysDTO>>(url);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Az adat nem tölthető be! {ex.Message}";
+        }
+        finally
+        {
+            isloading = !isloading;
+        }
+    }
+
+    private async Task AddNewIrregularDay()
+    {
+        var response = await HttpClient.PostAsJsonAsync("/DataManagement/AddIrregularDay", newIrregularDay);
+
+        if (response.IsSuccessStatusCode)
+        {
+            NavManager.NavigateTo("/indexirregulardays");
+        }
+
+    }
+}
