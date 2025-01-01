@@ -7,6 +7,11 @@
 
 <h3>Munkaszüneti napok</h3>
 
+@* @foreach (var item in fixVacationDays)
+{
+    <p>@item.Key @item.Value</p>
+} *@
+
 <div class="row">
     <div class="col-md-4">
         <EditForm Model="newIrregularDay" OnValidSubmit="AddNewIrregularDay" FormName="AddnewIrregularDay" Enhance>
@@ -48,11 +53,39 @@
 @code {
     [SupplyParameterFromForm]
     public IrregularDaysDTO newIrregularDay { get; set; } = new();
+    public List<IrregularDaysDTO> newIrregularDayList { get; set; } = new();
     public DateTime today = DateTime.Now;
+
+    private static int currentYear { get; set; } = DateTime.Now.Year;
 
     private List<IrregularDaysDTO> irregularDaylist = new();
     private string errorMessage = String.Empty;
     private bool isloading = false;
+    private bool dateExists = false;
+
+    Dictionary<DateTime, bool> fixVacationDays = new Dictionary<DateTime, bool>();
+
+    private void fillDict()
+    {
+        // fixVacationDays.Add(new DateTime(currentYear, 1, 1), false);
+        // fixVacationDays.Add(new DateTime(currentYear, 3, 15), false);
+        // fixVacationDays.Add(new DateTime(currentYear, 5, 1), false);
+        // fixVacationDays.Add(new DateTime(currentYear, 8, 20), false);
+        // fixVacationDays.Add(new DateTime(currentYear, 10, 23), false);
+        // fixVacationDays.Add(new DateTime(currentYear, 12, 25), false);
+        // fixVacationDays.Add(new DateTime(currentYear, 12, 26), false);
+
+        // foreach (var irrDay in irregularDaylist)
+        // {
+        //     if (irrDay.IrrDate.Year == 2025 && !fixVacationDays.ContainsKey(irrDay.IrrDate))
+        //     {
+        //         newIrregularDay.IrrDate = irrDay.IrrDate;
+        //         newIrregularDay.Workday = irrDay.Workday;
+        //         AddNewIrregularDay();
+        //     }   
+        // }
+    }
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,7 +112,10 @@
         {
             isloading = !isloading;
         }
+        fillDict();
     }
+
+
 
     private async Task AddNewIrregularDay()
     {
@@ -89,6 +125,11 @@
         {
             NavManager.NavigateTo("/indexirregulardays");
         }
-
+        else
+        {
+            Console.WriteLine("teszt");
+        }
     }
+
+
 }

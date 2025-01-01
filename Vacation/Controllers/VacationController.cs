@@ -143,5 +143,32 @@ namespace Vacation.Controllers
             //var irregulardayDTO = irregularday.Adapt<List<IrregularDaysDTO>>();
             return Ok(employeedata);
         }
+
+        [HttpGet("VacationCountById/{EId}")]
+        public async Task<ActionResult<List<VacationCountDTO>>> GetEmployee(int Employeeid)
+        {
+            var employeedata = await _DBContext.employees
+                .Where(x => x.EmployeeId == Employeeid)
+                .Include(c => c.Children)
+                //.Include(d => d.Department)
+                .Select(x => new VacationCountDTO
+                {
+                    EmployeeId = x.EmployeeId,
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                    DateOfBirth = x.DateOfBirth,
+                    NameOfMother = x.NameOfMother,
+                    StartOfEmployment = x.StartOfEmployment,
+                    InsuranceNumber = x.InsuranceNumber,
+                    Role = x.Role,
+                    Disability = x.Disability,
+                    ChildrenId = x.Children.Where(d => DateTime.Now.Year - d.DateOfBirth.Year <= 16).Select(x => x.Disability).ToList(),
+                    ChildrenDisab = x.Children.Select(d => d.Disability).ToList()
+                })
+                .ToListAsync();
+
+            //var irregulardayDTO = irregularday.Adapt<List<IrregularDaysDTO>>();
+            return Ok(employeedata);
+        }
     }
 }

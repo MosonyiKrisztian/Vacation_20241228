@@ -17,7 +17,7 @@ namespace Vacation.DAL.Data
         public DbSet<VacationType> vacationtypes { get; set; }
         public DbSet<IrregularDay> irregularDays { get; set; }
 
-        public DbSet<ChildEmployee> childemployee { get; set; }   
+       // public DbSet<ChildEmployee> childemployee { get; set; }   
     }
 }
 

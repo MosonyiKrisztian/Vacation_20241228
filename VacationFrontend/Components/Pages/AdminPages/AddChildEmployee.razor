@@ -16,8 +16,8 @@
             <ValidationSummary class="text-danger" />
             <div class="mb-3">
                 <label for="dselect" class="form-label">Gyerek:</label>
-                <InputSelect id="dselect" class="form-control" @bind-Value="newChildEmployee.ChildrenId">
-                    <option value="" disabled selected></option>
+                <InputSelect id="dselect" class="form-control" @bind-Value="newChildEmployee.ChildId">
+                    <option value="" ></option>
                     @foreach (var child in childList)
                     {
                         <option value="@child.ChildId">@child.FirstName @child.LastName</option>
@@ -29,7 +29,7 @@
                 <label for="dselect" class="form-label">Munkavállaló:</label>
                 <InputSelect id="dselect" class="form-control" @bind-Value="newChildEmployee.EmployeeId" >
                     
-                    <option value="" disabled selected></option>
+                    <option value="" ></option>
                     @foreach (var employee in employeeList)
                     {
                         <option value="@employee.EmployeeId">@employee.FirstName @employee.LastName</option>
@@ -45,23 +45,12 @@
     </div>
 </div>
 
-
-
-
-
-
 @code {
 
-
     [SupplyParameterFromForm]
-    public ChildEmployeeDTO newChildEmployee { get; set; } = new();
-
-
+    public AddChildEmployeeDTO newChildEmployee { get; set; } = new();
     private List<ChildDTO> childList = new();
     private List<EmployeeDTO> employeeList = new();
-
- 
-
     private string errorMessage = string.Empty;
     private bool isLoading = false;
 
@@ -71,7 +60,6 @@
         await LoadEmployeeAsync("Account/EmployeeGet");
     }
 
-    
     private async Task LoadChildAsync(string url)
     {
         errorMessage = string.Empty;

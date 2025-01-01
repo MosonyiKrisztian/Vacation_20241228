@@ -48,35 +48,35 @@
             <div class="szabidoboz">
                 <div class="szabifeher">
                     <span>Alapszabadság:</span>
-                    <div class="szabikek">@vacationNr.GetVacationNr(emp)["alapszabadasag"] nap</div>
+                    <div class="szabikek">@vacationNr.GetVacationNr(emp, currentYear)["alapszabadasag"] nap</div>
                 </div>
                 <div class="szabifeher">
                     <span>Pótszabadság életkor alapján:</span>
-                    <div class="szabikek">@vacationNr.GetVacationNr(emp)["potkorszabadasag"] nap</div>
+                    <div class="szabikek">@vacationNr.GetVacationNr(emp, currentYear)["potkorszabadasag"] nap</div>
                 </div>
                 <div class="szabifeher">
                     <span>Fiatal munkavállaló:</span>
-                    <div class="szabikek">@vacationNr.GetVacationNr(emp)["fiatalmvallalosz"] nap</div>
+                    <div class="szabikek">@vacationNr.GetVacationNr(emp, currentYear)["fiatalmvallalosz"] nap</div>
                 </div>
                 <div class="szabifeher">
                     <span>Gyermekek után:</span>
-                    <div class="szabikek">@vacationNr.GetVacationNr(emp)["gyerekszabadasag"] nap</div>
+                    <div class="szabikek">@vacationNr.GetVacationNr(emp, currentYear)["gyerekszabadasag"] nap</div>
                 </div>
                 <div class="szabifeher">
                     <span>Fogyatékosság miatt:</span>
-                    <div class="szabikek">@vacationNr.GetVacationNr(emp)["fogyatekszabadasag"] nap</div>
+                    <div class="szabikek">@vacationNr.GetVacationNr(emp, currentYear)["fogyatekszabadasag"] nap</div>
                 </div>
                 <div class="szabifeher">
                     <span>Összesen:</span>
-                    <div class="szabikek">@vacationNr.GetVacationNr(emp)["totalszabadasag"] nap</div>
+                    <div class="szabikek">@vacationNr.GetVacationNr(emp, currentYear)["totalszabadasag"] nap</div>
                 </div>
                 <div class="szabifeher">
                     <span>Ebben az évben igénybevett szabadságnapok:</span>
-                    <div class="szabikek">@($"{usedVacationNr.GetUsedVacationNr(emp, requestList)}  nap"  ) </div>
+                    <div class="szabikek">@($"{usedVacationNr.GetUsedVacationNr(emp, requestList, currentYear)}  nap") </div>
                 </div>
                 <div class="szabifeher">
                     <span>Felhasználható szabadság:</span>
-                    <div class="szabikek"> @($"{vacationNr.GetVacationNr(emp)["totalszabadasag"] - usedVacationNr.GetUsedVacationNr(emp, requestList) }  nap") </div>
+                    <div class="szabikek"> @($"{vacationNr.GetVacationNr(emp, currentYear)["totalszabadasag"] - usedVacationNr.GetUsedVacationNr(emp, requestList, currentYear)}  nap") </div>
                 </div>
                 <div class="btn-planner w-auto">
                     <a class="btn-planner2 w-auto" href="/planner/@emp.EmployeeId">Szabadság igény</a>
@@ -101,7 +101,7 @@
 
     public VacationCalculation usedVacationNr = new();
     public VacationCalculation vacationNr = new();
-    public CurrentYear currentYear = new();
+    public int currentYear = DateTime.Now.Year;
 
     protected override async Task OnInitializedAsync()
     {
@@ -111,7 +111,7 @@
             employeeList = employeeList.Where(x => x.EmployeeId == id).ToList();
 
             requestList = await HttpClient.GetFromJsonAsync<List<ApproveRejectDTO>>($"/Vacation/EmployeeVacationRequest/{id}");
-            requestList = requestList.Where(x => x.employeeId == id).ToList();
+            requestList = requestList.Where(x => x.employeeId == id && x.ToDate.Year == currentYear).ToList();
 
             var usedVacationNrx = requestList.Where(c => c.ToDate.Year.Equals(DateTime.Now.Year))
                                 .GroupBy(r => new

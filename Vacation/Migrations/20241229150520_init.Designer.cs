@@ -11,7 +11,7 @@ using Vacation.DAL.Data;
 namespace Vacation.Migrations
 {
     [DbContext(typeof(MySQLDBContext))]
-    [Migration("20241222191307_init")]
+    [Migration("20241229150520_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -118,6 +118,10 @@ namespace Vacation.Migrations
                     b.Property<int>("Disability")
                         .HasColumnType("int");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("FirstName")
                         .HasColumnType("longtext");
 
@@ -129,6 +133,10 @@ namespace Vacation.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("NameOfMother")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Role")

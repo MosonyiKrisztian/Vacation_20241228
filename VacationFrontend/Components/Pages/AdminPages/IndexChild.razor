@@ -19,7 +19,7 @@ else
         <QuickGrid Class="table text-white" ItemsProvider="@childGrid">
             <PropertyColumn Title="Vezetéknév" Property="@(p=>p.FirstName)" />
             <PropertyColumn Title="Keresztnév" Property="@(p=>p.LastName)" />
-            <PropertyColumn Title="Születési idő" Property="@(p=>p.DateOfBirth)" />
+            <PropertyColumn Title="Születési dátum" Property="@(p=>p.DateOfBirth)" Format="yyyy.MM.dd" />
             <TemplateColumn Context="child">
                <a href="@($"/editchild?Id={child.ChildId}")" class="btn btn-keres">Módosít</a>
             </TemplateColumn>

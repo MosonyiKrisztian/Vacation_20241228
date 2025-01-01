@@ -137,6 +137,8 @@ namespace Vacation.Migrations
                     NameOfMother = table.Column<string>(type: "longtext", nullable: true),
                     StartOfEmployment = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     InsuranceNumber = table.Column<string>(type: "longtext", nullable: false),
+                    Email = table.Column<string>(type: "longtext", nullable: false),
+                    Password = table.Column<string>(type: "longtext", nullable: false),
                     Role = table.Column<string>(type: "longtext", nullable: true),
                     Disability = table.Column<int>(type: "int", nullable: false),
                     DepartmentID = table.Column<int>(type: "int", nullable: false)

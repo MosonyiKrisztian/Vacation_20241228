@@ -24,8 +24,6 @@ namespace SharedDTO
         public virtual List<string>? ChildrenFirstName { get; set; }
         public virtual List<string>? ChildrenLastName { get; set; }
 
-
-
     }
 }
 

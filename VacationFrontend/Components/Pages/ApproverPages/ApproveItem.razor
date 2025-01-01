@@ -213,7 +213,6 @@ else
             }
             return result;
         }
-        //set{}
     }
 
     private async Task ChangeRequest(int id, ApproveRejectDTO actualrequest)
@@ -228,10 +227,11 @@ else
             {
                 if (item.RequestId == id && item.status != actualrequest.status)
                 {
-                    NavManager.NavigateTo(NavManager.Uri, forceLoad: true);   
+                    errorMessage = "Sikeres módosítás!";
+                    NavManager.NavigateTo(NavManager.Uri, true);   
                 }
             }
-            
+
             //NavManager.NavigateTo("/");
         }
         else
@@ -252,7 +252,8 @@ else
                     var response = await HttpClient.PatchAsJsonAsync($"/DataManagement/ApproveRejectRequest/{item.RequestId}", item);
                     if (response.IsSuccessStatusCode)
                     {
-                        errorMessage = response.RequestMessage.ToString();
+                        errorMessage = "Sikeres módosítás"; //response.RequestMessage.ToString();
+                        NavManager.NavigateTo(NavManager.Uri,  true);
                     }
                     else
                     {
@@ -266,11 +267,11 @@ else
 
     }
 
-    private async Task ShowMessage()
-    {
-        await Task.Delay(TimeSpan.FromSeconds(2));
+    // private async Task ShowMessage()
+    // {
+    //     await Task.Delay(TimeSpan.FromSeconds(2));
         
-        StateHasChanged();
-        //notification.ShowMessage("This is a temporary message!");
-    }
+    //     StateHasChanged();
+    //     //notification.ShowMessage("This is a temporary message!");
+    // }
 }

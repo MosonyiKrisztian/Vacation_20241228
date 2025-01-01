@@ -223,46 +223,32 @@ namespace Vacation.Controllers
             return Ok(childrenDtos);
         }
 
-        //[HttpPost("AddChildEmployee")]  //gyerek-szülő kapcsolat hozzáadása
-        //public async Task<ActionResult<List<ChildEmployeeDTO>>> AddChildEmployee([FromBody] ChildEmployeeDTO childemployeedto)
-        //{
-        //    var child = await _DBContext.children
-        //         .Select(e => new ChildEmployeeDTO
-        //         {
+        [HttpPost("AddChildEmployee")]
+        public async Task<ActionResult<AddChildEmployeeDTO>> AddChildEmployee([FromBody] AddChildEmployeeDTO childEmployeeDTO)
+        {
+            var employee = await _DBContext.employees.Include(c => c.Children).FirstOrDefaultAsync(c => c.EmployeeId == childEmployeeDTO.EmployeeId);
+            var child = await _DBContext.children.FindAsync(childEmployeeDTO.ChildId);
 
-        //             ChildrenId = e.ChildId,
-        //             EmployeeId = e.Employees.First().EmployeeId
-        //         })
-        //        .ToListAsync();
-        //    //var employee = await _DBContext.employees.ToListAsync();
+            if (employee == null || child == null)
+            {
+                return NotFound("Nincs ilyen gyermek vagy alkalmazott");
+            }
 
-        //    if (child == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    //var childrenemployeeDtos = childemployeedto.Adapt<List<ChildDTO>>();
-        //    _DBContext.childemployee.Add(childemployeedto);
-        //    await _DBContext.SaveChangesAsync();
-        //    return Ok(childemployeedto);
+            // Kapcsolat hozzáadása
+            if (!employee.Children.Contains(child))
+            {
+                employee.Children.Add(child);
+                await _DBContext.SaveChangesAsync();
+            }
 
-        //    //    /////////////////////////////////////////////////////
-        //    //    ///
-        //    //    var childemployee = childemployeedto.Adapt<ChildEmployee>();
-        //    //    _DBContext.childemployee.Add(childemployee);
-        //    //    await _DBContext.SaveChangesAsync();
+            var resultDto = child.Adapt<AddChildEmployeeDTO>();
+            resultDto.EmployeeId = employee.EmployeeId;
+            return Ok(resultDto);
+        }
 
-        //    //    var childempolyees = await _DBContext.childemployee
-        //    //           .ToListAsync();
-
-        //    //    var childrenDtos = childemployee.Adapt<List<ChildEmployeeDTO>>();
-        //    //    return Ok(childrenDtos);
-
-        //}
-
-
-            /// PATCH - adatok módosítása  - PATCH apik
-            // Gyermek frissítése 
-            [HttpPatch("PatchChild/{Id}")]
+        /// PATCH - adatok módosítása  - PATCH apik
+        // Gyermek frissítése 
+        [HttpPatch("PatchChild/{Id}")]
         public async Task<ActionResult<List<ChildDTO>>> UpdateChild(int Id, [FromBody] ChildDTO updatechilddto)
         {
             var selectChild = await _DBContext.children.FindAsync(Id);

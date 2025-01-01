@@ -4,6 +4,7 @@
 @inject HttpClient HttpClient
 @inject NavigationManager NavManager
 @using SharedDTO
+@using VacationFrontend.Calculation
 
 @rendermode InteractiveServer
 
@@ -11,16 +12,9 @@
     <h3><span>SZABADSÁGTERVEZŐ</span></h3>
 </div>
 
-@* <div>
-   @foreach (var emp in employeeList)
-    {   *@
-        <div class="alapadatok d-flex">
-                <div class="nev d-inline-flex"><span>Név:</span><div>  teszt user@* @emp.FirstName @emp.LastName *@ </div></div>
-
-        </div>
-@*     }
-</div> *@
-
+<div class="alapadatok d-flex">
+    <div class="nev d-inline-flex"><span>Név:</span><div> @name  </div></div>
+</div>
 
 
 @* <AuthorizeView>
@@ -31,6 +25,7 @@
     </div>
 </AuthorizeView>
  *@
+
 <div class="yearcontainer d-flex justify-content-center">
     <button @onclick="DecreaseYear" class="yearswitch">@("<<")</button>
 
@@ -45,6 +40,9 @@
             <option value="@monthNames.IndexOf(monthName)">@monthName</option>
         }
     </select>
+</div>
+<div>
+    <label class="d-flex justify-content-center" style="font-weight:500">@message</label>
 </div>
 
 <div class="calender-container" >
@@ -142,11 +140,9 @@
 </div>
 
 <div class="buttoncontainer">
-<a href="#" @onclick="SubmitRequests" class="btn-submit d-inline-flex">Mentés és küldés</a>
+    <a href="#" @onclick=@(()=> SubmitRequests(id)) class="btn-submit d-inline-flex">Mentés és küldés</a>
 <a href="@($"uservacation/{id}")" class="btn btn-keres d-inline-flex">Vissza</a>
 </div>
-<p>@message</p>
-
 
 @code {
     //user
@@ -176,6 +172,12 @@
 
     List<NewVacationRequestDTO>? VacationsList;
     List<IrregularDaysDTO>? IrregularDaysList;
+    List<ApproveRejectDTO> requestList = new();
+    List<ApproveRejectDTO> filteredRequestList = new();
+
+    List<VacationCountDTO> employeeList = new();
+    public VacationCalculation usedVacationNr = new();
+    public VacationCalculation vacationNr = new();
 
     private HashSet<NewVacationRequestDTO> _datesWithVacation = new HashSet<NewVacationRequestDTO>();
     DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -185,10 +187,11 @@
     private int actualMonth { get; set; } = DateTime.Now.Month;
     private int monthIndex { get; set; } = DateTime.Now.Month - 1;
     private static int actualYear { get; set; } = DateTime.Now.Year;
-    private DateTime actualDate = DateTime.Now;
+    private DateTime actualDate = DateTime.Now.Date;   //2024.12.31, KM (add : .Date)
     private int sequenceOfStartDayOfWeek;
     private int sequenceOfEndDayOfWeek;
     private int selectedMonth { get; set; } = DateTime.Now.Month;
+    private double remainingVacationNr;
     private bool isChecked0 = false;
     private bool isChecked1 = false;
     private bool isChecked2 = false;
@@ -196,8 +199,9 @@
     private bool isChecked4 = false;
     private bool isChecked5 = false;
     public string buttonvalue = "";
-    public string message = "";
+    public string message = " ";
     public string searchText = "";
+    private string name;
     // private List<int> yearOptions { get; set; } = Enumerable.Range(actualYear - 1, DateTime.Now.Year + 3 - actualYear).ToList();  //actual year +- 1 year
 
 
@@ -209,6 +213,11 @@
 
         IrregularDaysList = await HttpClient.GetFromJsonAsync<List<IrregularDaysDTO>>("Vacation/IrregularDay");
 
+        employeeList = await HttpClient.GetFromJsonAsync<List<VacationCountDTO>>("Vacation/VacationCount");
+
+        requestList = await HttpClient.GetFromJsonAsync<List<ApproveRejectDTO>>($"/Vacation/EmployeeVacationRequest/{id}");
+        //requestList = requestList.Where(x=>x.ToDate.Year == actualYear).ToList();
+
         //remove the last indexed element = ""
         if (monthNames.Any()) //prevent IndexOutOfRangeException for empty list
         {
@@ -218,8 +227,8 @@
 
         AddAdjacentMonthFractions();
         GenerateCalenderHead();
-        GenerateCalenderBody();   
-
+        GenerateCalenderBody();
+        GetRequestsPerYear();
     }
 
     private void LoadCalender(ChangeEventArgs e)
@@ -229,10 +238,12 @@
         // int monthIndex = DateTime.ParseExact(month, "MMMM", System.Globalization.CultureInfo.CreateSpecificCulture("en-GB")).Month;
         startDate = new DateTime(actualYear, selectedMonth, 1);
         endDate = new DateTime(actualYear, selectedMonth, 1).AddMonths(1).AddDays(-1);
+        _datesWithVacation.Clear();
 
         AddAdjacentMonthFractions();
         GenerateCalenderHead();
         GenerateCalenderBody();
+        GetRequestsPerYear();
     }
 
     private void GenerateCalenderHead()
@@ -298,10 +309,15 @@
 
                     foreach (var day in IrregularDaysList)
                     {
-                        if (day.IrrDate == weeks[weekIndex].Dates[dayIndex].ToDate)
+                        if (day.IrrDate == weeks[weekIndex].Dates[dayIndex].ToDate && day.Workday == true)
                         {
                             weeks[weekIndex].Dates[dayIndex].Type = "#ffffff";
                             weeks[weekIndex].Dates[dayIndex].status = 0;
+                        }
+                        if (day.IrrDate == weeks[weekIndex].Dates[dayIndex].ToDate && day.Workday == false)
+                        {
+                            weeks[weekIndex].Dates[dayIndex].Type = "#ff0000";
+                            //weeks[weekIndex].Dates[dayIndex].status = 0;
                         }
                     }
 
@@ -334,7 +350,7 @@
                     }
                     foreach (var day in IrregularDaysList)
                     {
-                        if (day.IrrDate == weeks[weekIndex].Dates[dayIndex].ToDate)
+                        if (day.IrrDate == weeks[weekIndex].Dates[dayIndex].ToDate && day.Workday == false)
                         {
                             weeks[weekIndex].Dates[dayIndex].Type = "#ff0000";
                         }
@@ -350,21 +366,35 @@
             actualYear++;
             startDate = new DateTime(actualYear, selectedMonth, 1);
             endDate = new DateTime(actualYear, selectedMonth, 1).AddMonths(1).AddDays(-1);
+            //GetRequestsPerYear();
+            _datesWithVacation.Clear();
         }
         AddAdjacentMonthFractions();
         GenerateCalenderHead();
         GenerateCalenderBody();
+        GetRequestsPerYear();
     }
 
     private void DecreaseYear()
     {
-        actualYear--;
-        startDate = new DateTime(actualYear, selectedMonth, 1);
-        endDate = new DateTime(actualYear, selectedMonth, 1).AddMonths(1).AddDays(-1);
+        if (actualYear > DateTime.Now.Year - 2)
+        {
+            actualYear--;
+            startDate = new DateTime(actualYear, selectedMonth, 1);
+            endDate = new DateTime(actualYear, selectedMonth, 1).AddMonths(1).AddDays(-1);
+            //GetRequestsPerYear();
+            _datesWithVacation.Clear();            
+        }
 
         AddAdjacentMonthFractions();
         GenerateCalenderHead();
         GenerateCalenderBody();
+        GetRequestsPerYear();
+    }
+    private void GetRequestsPerYear()
+    {
+        filteredRequestList = requestList.Where(x => x.ToDate.Year == actualYear).ToList();
+        CountRemainingVacation();
     }
 
     private void AddAdjacentMonthFractions()
@@ -380,10 +410,11 @@
 
     private void Showbuttonvalue(DateTime toDate)
     {
-        message = "";
-        if (toDate <= actualDate)
+        //message = "";
+        if (toDate < actualDate)
         {
-            message = ($"Dátum: {toDate}   Dátum a múltban");
+            //var value = toDate.ToShortDateString();
+            message = ($"Dátum: {toDate.ToShortDateString()} a múltban!");
         }
         else
         {
@@ -424,7 +455,8 @@
                             }
                             else
                             {
-                                message = ($"Dátum: {toDate}  Már van elküldött szabadságigény erre a napra!");
+                                //var value = toDate.ToShortDateString();
+                                message = ($"Dátum: {toDate.ToShortDateString()}  Már van elküldött szabadságigény erre a napra!");
                             }
                         }  
                     }
@@ -466,6 +498,8 @@
                 break;
         }
     }
+
+
     private void LoadRequests()
     {
         // remove dates if type changed or deselected (white)
@@ -475,9 +509,10 @@
             {
                 foreach (var dateWV in _datesWithVacation)
                 {
-                    if ((dateWV.DateValue == date.DateValue && dateWV.Type != date.Type) || dateWV.Type == "#ffffff" || dateWV.status != 0)
+                    if ((dateWV.Type == "#ffffff" || dateWV.DateValue == date.DateValue && dateWV.Type != date.Type) || dateWV.status != 0)
                     {
                         _datesWithVacation.Remove(dateWV);
+                        CountRemainingVacation();
                     }
                 }
             }
@@ -486,31 +521,62 @@
             {
                 //with HashSet
                 _datesWithVacation.Add(date);
+                CountRemainingVacation();
             }
         }
     }
 
-
-    private async Task SubmitRequests()
+    private void CountRemainingVacation()
     {
-        if (_datesWithVacation != null)
+        remainingVacationNr = 0;
+        foreach (var employee in employeeList)
         {
-            foreach (var date in _datesWithVacation)
+            if (employee.EmployeeId == id)
             {
-                date.status = 1; //date.Code = 1;  //status 0 = new / 1 = submitted(pending) / 2 = accepted / 3 = rejected
-                date.EmployeeId = id;
+                var Year = (int)actualYear;
+                var totalvacation = vacationNr.GetVacationNr(employee, Year)["totalszabadasag"];
+                var usedvacation = usedVacationNr.GetUsedVacationNr(employee, filteredRequestList, Year);
 
-                var response = await HttpClient.PostAsJsonAsync("DataManagement/AddVacationRequest", date);
-                // if (response.IsSuccessStatusCode)
-                // {
-                //     NavManager.NavigateTo("/uservacation");
-                // }
-                // else
-                // {
-                //     var errorResponse = await response.Content.ReadAsStringAsync();
-                //     Console.WriteLine($"Error: {response.StatusCode}, Message: {errorResponse}");
-                // }
+                remainingVacationNr = totalvacation - usedvacation - _datesWithVacation.Count;
+                remainingVacationNr = remainingVacationNr < 0 ? 0 : remainingVacationNr;
+                message = $" Még {remainingVacationNr} felhasználható nap van az évre";
+                name = $"{employee.LastName} {employee.FirstName} ";
             }
+        }
+    } 
+
+    public async Task SubmitRequests(int id)
+    {
+        if (remainingVacationNr > 0)   //2024.12.31, KM (remove : =)
+        {
+            if (_datesWithVacation != null)
+            {
+                 foreach (var date in _datesWithVacation)
+                 {
+                     date.status = 1; //date.Code = 1;  //status 0 = new / 1 = submitted(pending) / 2 = accepted / 3 = rejected
+                     date.EmployeeId = id;
+
+            var response = await HttpClient.PostAsJsonAsync("DataManagement/AddVacationRequest", date);
+
+            // if (response.IsSuccessStatusCode)
+                    // {
+                    //     Console.WriteLine($"{id} {response}");
+                    // }
+                    // else
+                    // {
+                    //     var errorResponse = await response.Content.ReadAsStringAsync();
+                    //     Console.WriteLine($"Error: {response.StatusCode}, Message: {errorResponse}");
+                    // }
+                // }
+             }
+            // else
+            // {
+            //     message = ($"Nincs egy nap sem kijelölve!");
+            }
+        }
+        else
+        {
+            message = ($"Túllépted az éves keretet!");
         }
     }
 }

@@ -11,7 +11,7 @@
 <div class="d-inline-flex m-2">
     <div>
         <label class="me-2">Kezdődátum: </label>
-        <input type="date" @onchange="UpdateStartDate" />
+        <input type="date" @onchange="UpdateStartDate" value="@startDate.ToString("yyyy-MM-dd")" />
         <input class="mx-3" 
                type="range" 
                min="@rangeDaysMin" max="@rangeDaysMax" 
@@ -33,7 +33,7 @@ else
     <table class="table">
         <thead>
             <tr>
-                <th>Dolgozó/dátum</th>
+                <th class="col-2">Munkavállaló / dátum</th>
                 @foreach (var date in dateRange)
                 {
                     <th>@date.ToString("MMM dd")</th>
@@ -41,104 +41,119 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var row in pivotData)
+            @foreach (var row in vacationList)
             {
-                toDateList.Clear();
+                //toDateList.Clear();
                 <tr>
-                    <td style="color:lemonchiffon">@($"{row.LastName} {row.FirstName}")</td>
+                    <td style="color:lemonchiffon">@($"{row.LastName} {row.FirstName} ")</td>
+                    @* <td style="color:lemonchiffon">@($"{row.LastName} {row.FirstName} (ID: {row.EmployeeId}) ")</td> *@
                     @foreach  (var date in dateRange)
                     {
-                        @foreach (var vacation in row.ToDate)
-                        { 
+                        @if (row.ToDate.Count !=0)
+                        {
+                            @foreach (var vacation in row.ToDate)
+                            {
+                                @* @if (toDateList != null)
+                                { *@
+                                    @if (!toDateList.ContainsKey(date))
+                                    {
+                                        if (date == vacation)
+                                        {
+                                            toDateList.Add(date, vacation);
+                                        }
+                                        else
+                                        {
+                                            toDateList.Add(date, new DateTime(1111, 11, 11));
+                                        }
+                                    }
+                                    else
+                                    {
+                                        @foreach (var dictItem in toDateList.ToList())
+                                        {
+                                            if (date == vacation && dictItem.Key != dictItem.Value)
+                                            {
+                                                toDateList[date] = vacation;
+                                            }
+                                        }
+                                    }
+                               @*  } *@
+                            }
+                        }
+                        else
+                        {
                             @if (toDateList != null)
                             {
                                 @if (!toDateList.ContainsKey(date))
                                 {
-                                    if (vacation == date)
-                                    {
-                                        toDateList.Add(date, vacation);
-                                    }
-                                    else
-                                    {
-                                        toDateList.Add(date, new DateTime(1111, 11, 11));
-                                    }      
+                                   toDateList.Add(date, new DateTime(1111, 11, 11));   
                                 }
-                                else 
-                                {
-                                    @foreach (var dictItem in toDateList.ToList())
-                                    {
-                                        if (vacation == date && dictItem.Key != dictItem.Value)
-                                        {
-                                            toDateList[date] = vacation;
-                                        }
-                                    }
-                                }                                                                                       
                             }
-                        }
+                        }   
                     }
-                    
+
                     @foreach (var item in toDateList)
                     {
-                            <td>
-                        @if (item.Key == item.Value)
-                        {
-                            <div style="color:lemonchiffon">  
+                        <td>
+                            @if (item.Key == item.Value)
+                            {
+                                <div style="color:lemonchiffon">  
 
-                                @foreach (var days in vacationList)
-                                {
-                                    @if (row.EmployeeId == days.EmployeeId)
+                                    @foreach (var days in vacationList)
                                     {
-                                        @for (int i = 0; i < days.ToDate.Count(); i++)
+                                        @if (row.EmployeeId == days.EmployeeId)
                                         {
-                                            @if (item.Key == days.ToDate[i])
+                                            @for (int i = 0; i < days.ToDate.Count(); i++)
                                             {
-                                                @for (int j = 0; j < days.status.Count(); j++)
+                                                @if (item.Key == days.ToDate[i])
                                                 {
-                                                    statusShow = days.status[i];
-                                                    @if (i == j)
+                                                    @for (int j = 0; j < days.status.Count(); j++)
                                                     {
-                                                        @if (statusShow < 4 )
+                                                        statusShow = days.status[i];
+                                                        @if (i == j)
                                                         {
-                                                            @if (statusShow == 1)
+                                                            @if (statusShow < 4)
                                                             {
-                                                                <div style="background-color:burlywood;width:1.8rem;height:1.8rem;border-radius:50%">
-                                                                <img src="img/question-mark-circle.svg" style="width:1.8rem; height:1.8rem"/>
-                                                                </div>
+                                                                @if (statusShow == 1)
+                                                                {
+                                                                    <div style="background-color:burlywood;width:1.8rem;height:1.8rem;border-radius:50%">
+                                                                        <img src="img/question-mark-circle.svg" style="width:1.8rem; height:1.8rem"/>
+                                                                    </div>
+                                                                }
+                                                                @if (statusShow == 2)
+                                                                {
+                                                                    <div style="background-color:lightgreen;width:1.8rem;height:1.8rem;border-radius:50%">
+                                                                        <img src="img/check-circle-1.svg" style="width:1.8rem; height:1.8rem" />
+                                                                    </div>
+                                                                }
+                                                                @if (statusShow == 3)
+                                                                {
+                                                                    <div style="background-color:lightcoral;width:1.8rem;height:1.8rem;border-radius:50%">
+                                                                        <img src="img/xmark-circle.svg" style="width:1.8rem; height:1.8rem" />
+                                                                    </div>
+                                                                }
                                                             }
-                                                            @if (statusShow == 2)
+                                                            else
                                                             {
-                                                                <div style="background-color:lightgreen;width:1.8rem;height:1.8rem;border-radius:50%">
-                                                                <img src="img/check-circle-1.svg" style="width:1.8rem; height:1.8rem" />
-                                                                </div>
+                                                                <span>-----</span>
                                                             }
-                                                            @if (statusShow == 3)
-                                                            {
-                                                                <div style="background-color:lightcoral;width:1.8rem;height:1.8rem;border-radius:50%">
-                                                                    <img src="img/xmark-circle.svg" style="width:1.8rem; height:1.8rem" />
-                                                                </div>
-                                                            }
-                                                        }
-                                                        else
-                                                        {
-                                                            <span>-</span>
                                                         }
                                                     }
                                                 }
                                             }
                                         }
                                     }
-                                }
-                            </div>  
-                        }
-                        else
-                        {
+                                </div>
+                            }
+                            else
+                            {
                                 <div style="color:lemonchiffon">
-                               <span>-</span>  <!-- No vacation on this day -->
-                            </div>
-                        }
+                                    <span>-----</span>  <!-- No vacation on this day -->
+                                </div>
+                            }
                         </td>
-                    }                 
+                    }
                 </tr>
+                toDateList.Clear();
             }
         </tbody>
     </table>
@@ -150,53 +165,38 @@ else
 
 @code {
     public List<OverviewbyDayDTO> vacationList = new();
-    private List<OverviewbyDayDTO> pivotData = new();
     private List<DateTime> dateRange = new();
     Dictionary<DateTime, DateTime> toDateList = new Dictionary<DateTime, DateTime>();
     public string errorMessage;
-    public DateTime startDate { get; set; } = DateTime.Now;
-    public int rangeDays { get; set; } = 6;
+    public DateTime startDate { get; set; } = DateTime.Now.Date;
+
+    public int rangeDays { get; set; } = 15;
     public int statusShow = 0;
     private int rangeDaysMin = 1;
     private int rangeDaysMax = 30;
 
     protected override async Task OnInitializedAsync()
-
     {
-        // startDate = DateTime.Now;
-        CalcDateRange();
-
         vacationList = await HttpClient.GetFromJsonAsync<List<OverviewbyDayDTO>>($"/Vacation/VacationRequestOverview");
-
-        pivotData = vacationList
-            .GroupBy(v => v.EmployeeId)
-            .Select(g => new OverviewbyDayDTO()
-                {
-                    EmployeeId = g.Key,
-                    FirstName = g.First().FirstName,
-                    LastName = g.First().LastName,
-                    ToDate = g.Min(x => x.ToDate),
-                    status = g.Min(x=>x.status),
-                })
-           .ToList();   
+        CalcDateRange();
     }
 
-    private void ChangeRange(ChangeEventArgs args)
+    private async Task ChangeRange(ChangeEventArgs args)
     {
         var range = args.Value.ToString();
         rangeDays = int.Parse(range);
-        CalcDateRange();
+        await CalcDateRange();
     }
 
-    private void UpdateStartDate(ChangeEventArgs args)
+    private async Task UpdateStartDate(ChangeEventArgs args)
     {
         var value = args.Value.ToString();
         startDate = value == string.Empty ? DateTime.Now : DateTime.Parse(value);
-        CalcDateRange();
+        await CalcDateRange();
 
     }
 
-    private void CalcDateRange()
+    private async Task CalcDateRange()
     {
         var endDate = startDate.AddDays(rangeDays);
         dateRange = Enumerable.Range(0, (endDate - startDate).Days + 1)

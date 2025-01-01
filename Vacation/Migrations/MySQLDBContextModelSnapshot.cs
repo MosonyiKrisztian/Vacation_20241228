@@ -115,6 +115,10 @@ namespace Vacation.Migrations
                     b.Property<int>("Disability")
                         .HasColumnType("int");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("FirstName")
                         .HasColumnType("longtext");
 
@@ -126,6 +130,10 @@ namespace Vacation.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("NameOfMother")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Role")
